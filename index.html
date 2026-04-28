@@ -4,143 +4,540 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>ReliefOS Pro Max | Gemini AI + Guided Tour</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <style>
-        /* ---------- GLOBAL VARS (unchanged) ---------- */
-        :root { --bg: #f0f5f8; --surface: #ffffff; --surface2: #f8fafb; --text: #1a2e2b; --text2: #4a5b58; --border: #e2e8f0; --accent: #0d9488; --accent2: #14b8a6; --accent3: #5eead4; --danger: #ef4444; --warning: #f59e0b; --success: #10b981; --info: #3b82f6; --shadow: 0 2px 8px rgba(0,0,0,0.06); --shadow-lg: 0 12px 32px rgba(0,0,0,0.1); --glass: rgba(255,255,255,0.85); --glass-border: rgba(255,255,255,0.5); --radius: 1.2rem; --radius-sm: 0.8rem; --radius-xs: 0.5rem; --transition: 0.25s cubic-bezier(0.4,0,0.2,1); --glow: 0 0 30px rgba(20,184,166,0.3); --navbar-h: 64px; }
-        [data-theme="dark"] { --bg: #0f1a1a; --surface: #152622; --surface2: #1a2e2a; --text: #e0f0ec; --text2: #a0b8b2; --border: #2a403a; --accent: #2dd4bf; --accent2: #5eead4; --accent3: #99f6e4; --shadow: 0 2px 8px rgba(0,0,0,0.3); --shadow-lg: 0 12px 32px rgba(0,0,0,0.4); --glass: rgba(21,38,34,0.88); --glass-border: rgba(45,212,191,0.25); --glow: 0 0 40px rgba(45,212,191,0.5); }
-        *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
-        html { scroll-behavior: auto; font-size:15px; }
-        body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); transition:background var(--transition),color var(--transition); min-height:100vh; display:flex; overflow-x:hidden; line-height:1.5; }
+        /* ===== GLOBAL DESIGN TOKENS ===== */
+        :root {
+            --bg: #f0f5f8;
+            --surface: #ffffff;
+            --surface2: #f8fafb;
+            --text: #1a2e2b;
+            --text2: #4a5b58;
+            --border: #e2e8f0;
+            --accent: #0d9488;
+            --accent2: #14b8a6;
+            --accent3: #5eead4;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --info: #3b82f6;
+            --shadow: 0 2px 8px rgba(0,0,0,0.06);
+            --shadow-lg: 0 12px 32px rgba(0,0,0,0.1);
+            --glass: rgba(255,255,255,0.85);
+            --glass-border: rgba(255,255,255,0.5);
+            --radius: 1.2rem;
+            --radius-sm: 0.8rem;
+            --radius-xs: 0.5rem;
+            --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+            --glow: 0 0 30px rgba(20,184,166,0.3);
+            --navbar-h: 64px;
 
-        /* ---------- iOS PASSCODE SCREEN (SIMPLIFIED) ---------- */
-        .auth-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; width: 100%; padding: 2rem; background: var(--bg); }
-        .auth-card { background: transparent; box-shadow: none; border: none; width: 100%; max-width: 320px; text-align: center; }
+            /* Lock screen specific */
+            --lock-bg: #f0f5f8;
+            --lock-surface: #ffffff;
+            --lock-key-bg: #ffffff;
+            --lock-key-bg-pressed: #0d9488;
+            --lock-key-shadow: 0 4px 16px rgba(13,148,136,0.15), 0 1px 4px rgba(0,0,0,0.08);
+            --lock-dot-empty: #d1dde0;
+            --lock-dot-filled: #0d9488;
+            --lock-display-bg: rgba(13,148,136,0.08);
+            --lock-display-border: rgba(13,148,136,0.25);
+            --lock-text: #1a2e2b;
+            --lock-text2: #4a5b58;
+        }
 
-        /* Visible passcode display */
-        .passcode-display { font-size: 2rem; font-weight: 900; letter-spacing: 0.3rem; color: var(--accent); margin-bottom: 2rem; background: var(--surface); border-radius: var(--radius-sm); padding: 0.5rem; border: 1px solid var(--border); display: inline-block; min-width: 200px; }
+        [data-theme="dark"] {
+            --bg: #0f1a1a;
+            --surface: #152622;
+            --surface2: #1a2e2a;
+            --text: #e0f0ec;
+            --text2: #a0b8b2;
+            --border: #2a403a;
+            --accent: #2dd4bf;
+            --accent2: #5eead4;
+            --accent3: #99f6e4;
+            --shadow: 0 2px 8px rgba(0,0,0,0.3);
+            --shadow-lg: 0 12px 32px rgba(0,0,0,0.4);
+            --glass: rgba(21,38,34,0.88);
+            --glass-border: rgba(45,212,191,0.25);
+            --glow: 0 0 40px rgba(45,212,191,0.5);
 
-        /* Circular dots */
-        .dots-container { display: flex; justify-content: center; gap: 1.8rem; margin: 2rem 0; }
-        .dot { width: 28px; height: 28px; border-radius: 50%; background: var(--surface2); border: 2px solid var(--border); transition: all 0.25s ease; }
-        .dot.filled { background: var(--accent); border-color: var(--accent); transform: scale(1.1); }
-        /* Shake animation */
-        .dots-container.shake { animation: dotShake 0.5s ease; }
+            --lock-bg: #0f1a1a;
+            --lock-surface: #152622;
+            --lock-key-bg: #1a2e2a;
+            --lock-key-bg-pressed: #2dd4bf;
+            --lock-key-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 1px 4px rgba(45,212,191,0.12);
+            --lock-dot-empty: #2a403a;
+            --lock-dot-filled: #2dd4bf;
+            --lock-display-bg: rgba(45,212,191,0.08);
+            --lock-display-border: rgba(45,212,191,0.3);
+            --lock-text: #e0f0ec;
+            --lock-text2: #a0b8b2;
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: auto; font-size: 15px; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            transition: background var(--transition), color var(--transition);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.5;
+        }
+
+        /* ===== LOCKSCREEN ===== */
+        #lockScreen {
+            position: fixed;
+            inset: 0;
+            z-index: 9000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--lock-bg);
+            transition: opacity 0.5s cubic-bezier(0.4,0,0.2,1),
+                        transform 0.5s cubic-bezier(0.4,0,0.2,1);
+            will-change: opacity, transform;
+            padding: 2rem 1rem;
+            gap: 0;
+        }
+
+        #lockScreen.unlocking {
+            opacity: 0;
+            transform: scale(1.04);
+            pointer-events: none;
+        }
+
+        /* Subtle background texture */
+        #lockScreen::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 60% 40% at 50% 0%, rgba(13,148,136,0.07) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 30% at 80% 100%, rgba(20,184,166,0.05) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        [data-theme="dark"] #lockScreen::before {
+            background:
+                radial-gradient(ellipse 60% 40% at 50% 0%, rgba(45,212,191,0.1) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 30% at 80% 100%, rgba(45,212,191,0.06) 0%, transparent 60%);
+        }
+
+        .lock-inner {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 340px;
+            gap: 0;
+        }
+
+        /* Passcode display */
+        .passcode-display-wrap {
+            width: 100%;
+            margin-bottom: 1.6rem;
+            animation: lockFadeIn 0.6s 0.1s ease both;
+        }
+        .passcode-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--lock-text2);
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+        .passcode-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: var(--lock-display-bg);
+            border: 1.5px solid var(--lock-display-border);
+            border-radius: 14px;
+            padding: 0.65rem 1.2rem;
+            font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: 0.35rem;
+            color: var(--accent);
+            text-align: center;
+            user-select: none;
+            backdrop-filter: blur(8px);
+        }
+        [data-theme="dark"] .passcode-display {
+            color: var(--accent2);
+        }
+
+        /* Dots */
+        .dots-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.4rem;
+            margin-bottom: 2rem;
+            height: 36px;
+            animation: lockFadeIn 0.6s 0.15s ease both;
+        }
+        .lock-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--lock-dot-empty);
+            border: 2px solid transparent;
+            transition: background 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+            flex-shrink: 0;
+        }
+        .lock-dot.filled {
+            background: var(--lock-dot-filled);
+            border-color: var(--lock-dot-filled);
+            transform: scale(1.18);
+            box-shadow: 0 0 8px rgba(13,148,136,0.4);
+        }
+        [data-theme="dark"] .lock-dot.filled {
+            box-shadow: 0 0 10px rgba(45,212,191,0.5);
+        }
+
         @keyframes dotShake {
-            0%,100% { transform: translateX(0); }
-            10%,50%,90% { transform: translateX(-8px); }
-            30%,70% { transform: translateX(8px); }
+            0%, 100% { transform: translateX(0); }
+            12%       { transform: translateX(-7px); }
+            36%       { transform: translateX(7px); }
+            60%       { transform: translateX(-5px); }
+            80%       { transform: translateX(4px); }
+        }
+        .dots-row.shake { animation: dotShake 0.45s ease; }
+
+        /* Keypad */
+        .keypad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 82px);
+            grid-template-rows: repeat(3, 82px);
+            gap: 1rem;
+            justify-content: center;
+            animation: lockFadeIn 0.6s 0.2s ease both;
         }
 
-        /* iOS keypad: 3x3 grid with round buttons */
-        .keypad { display: grid; grid-template-columns: repeat(3, 80px); gap: 0.9rem; justify-content: center; margin-top: 1rem; }
-        .keypad button {
-            width: 80px; height: 80px; border-radius: 50%; font-size: 1.8rem; font-weight: 600;
-            background: var(--surface); border: 2px solid var(--border); color: var(--text);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: all 0.2s ease; cursor: pointer; font-family: inherit;
-            display: flex; align-items: center; justify-content: center;
+        .key-btn {
+            width: 82px;
+            height: 82px;
+            border-radius: 50%;
+            border: none;
+            background: var(--lock-key-bg);
+            color: var(--lock-text);
+            font-family: 'Inter', sans-serif;
+            font-size: 1.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--lock-key-shadow);
+            transition:
+                background 0.12s ease,
+                color 0.12s ease,
+                transform 0.12s cubic-bezier(0.34,1.56,0.64,1),
+                box-shadow 0.12s ease;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            position: relative;
+            overflow: hidden;
         }
-        .keypad button:active, .keypad button.pressed {
-            background: var(--accent2); color: #fff; border-color: var(--accent);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1); transform: scale(0.95);
+        .key-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle at 38% 38%, rgba(255,255,255,0.18) 0%, transparent 60%);
+            pointer-events: none;
         }
-        .keypad button:focus-visible { outline: none; }
 
-        .auth-error { color: var(--danger); font-size: 0.85rem; margin-top: 1rem; display: none; }
+        .key-btn:hover {
+            background: var(--surface2);
+            box-shadow: 0 6px 20px rgba(13,148,136,0.2), 0 1px 4px rgba(0,0,0,0.1);
+        }
+        [data-theme="dark"] .key-btn:hover {
+            background: #223830;
+            box-shadow: 0 6px 20px rgba(45,212,191,0.25), 0 1px 4px rgba(0,0,0,0.3);
+        }
 
-        /* Hide the rest of the UI until unlocked */
-        .sidebar { width:260px; height:100vh; position:fixed; left:0; top:0; background:var(--glass); backdrop-filter:blur(20px); border-right:1px solid var(--glass-border); z-index:200; display:flex; flex-direction:column; transition:transform var(--transition); box-shadow:var(--shadow-lg); }
-        .sidebar-header { padding:1.5rem 1.2rem; border-bottom:1px solid var(--border); flex-shrink:0; }
-        .sidebar-logo { font-size:1.6rem; font-weight:900; letter-spacing:-0.5px; background:linear-gradient(135deg,var(--accent),var(--accent3)); background-clip:text; -webkit-background-clip:text; color:transparent; display:flex; align-items:center; gap:0.5rem; }
-        .sidebar-nav { flex:1; padding:1rem 0.8rem; display:flex; flex-direction:column; gap:0.3rem; overflow-y:auto; }
-        .sidebar-nav a, .sidebar-nav button { display:flex; align-items:center; gap:0.7rem; padding:0.7rem 1rem; border-radius:var(--radius-sm); text-decoration:none; color:var(--text2); font-weight:500; transition:all var(--transition); border:none; background:transparent; cursor:pointer; font-family:inherit; font-size:0.9rem; width:100%; text-align:left; }
-        .sidebar-nav a:hover, .sidebar-nav button:hover, .sidebar-nav a.active { background:var(--accent); color:#fff; box-shadow:var(--glow); transform:translateX(3px); }
-        .sidebar-nav a i { width:20px; text-align:center; flex-shrink:0; }
-        .sidebar-footer { padding:1rem; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:0.5rem; flex-shrink:0; }
-        .theme-toggle { display:flex; align-items:center; gap:0.6rem; padding:0.6rem 1rem; border-radius:var(--radius-sm); cursor:pointer; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-family:inherit; font-size:0.85rem; transition:all var(--transition); width:100%; justify-content:center; }
-        .theme-toggle:hover { border-color:var(--accent); box-shadow:var(--glow); }
-        .sidebar-badge { background:var(--accent); color:#fff; border-radius:20px; padding:0.15rem 0.5rem; font-size:0.7rem; font-weight:700; margin-left:auto; flex-shrink:0; }
-        .main { margin-left:260px; flex:1; min-height:100vh; display:flex; flex-direction:column; transition:margin var(--transition); }
-        .topbar { height:var(--navbar-h); min-height:var(--navbar-h); background:var(--glass); backdrop-filter:blur(20px); border-bottom:1px solid var(--glass-border); display:flex; align-items:center; justify-content:space-between; padding:0 2rem; position:sticky; top:0; z-index:100; gap:1rem; flex-shrink:0; }
-        .topbar h2 { font-weight:700; font-size:1.2rem; color:var(--text); }
-        .topbar-actions { display:flex; gap:0.7rem; align-items:center; }
-        .btn { padding:0.55rem 1.2rem; border-radius:var(--radius-xs); font-weight:600; font-family:inherit; font-size:0.85rem; cursor:pointer; border:none; transition:all var(--transition); display:inline-flex; align-items:center; gap:0.4rem; white-space:nowrap; }
-        .btn-primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; box-shadow:var(--glow); }
-        .btn-primary:hover { transform:translateY(-2px); box-shadow:0 12px 32px rgba(0,0,0,0.14); filter:brightness(1.1); }
-        .btn-outline { background:transparent; border:1.5px solid var(--border); color:var(--text); }
-        .btn-outline:hover { border-color:var(--accent); }
-        .btn-sm { padding:0.35rem 0.8rem; font-size:0.75rem; border-radius:2rem; }
-        .country-select { padding:0.45rem 0.8rem; border-radius:2rem; border:1.5px solid var(--border); background:var(--surface2); color:var(--text); font-family:inherit; font-size:0.8rem; font-weight:600; cursor:pointer; width:100%; margin-top:0.5rem; }
-        .pulse { animation:pulse 2s infinite; }
+        .key-btn.pressed,
+        .key-btn:active {
+            background: var(--lock-key-bg-pressed) !important;
+            color: #fff !important;
+            transform: scale(0.91);
+            box-shadow: 0 2px 8px rgba(13,148,136,0.2) !important;
+        }
+        [data-theme="dark"] .key-btn.pressed,
+        [data-theme="dark"] .key-btn:active {
+            box-shadow: 0 2px 8px rgba(45,212,191,0.25) !important;
+        }
+
+        /* Backspace / delete row */
+        .key-btn.key-back {
+            font-size: 1.2rem;
+            color: var(--lock-text2);
+            background: transparent;
+            box-shadow: none;
+        }
+        .key-btn.key-back:hover { background: var(--lock-display-bg); box-shadow: none; }
+        .key-btn.key-back.pressed,
+        .key-btn.key-back:active { background: var(--lock-display-bg) !important; color: var(--accent) !important; box-shadow: none !important; }
+
+        /* Bottom row: empty | 0-placeholder | backspace */
+        .key-spacer { width: 82px; height: 82px; }
+
+        /* Error message */
+        .lock-error {
+            font-size: 0.8rem;
+            color: var(--danger);
+            text-align: center;
+            height: 1.2rem;
+            margin-top: 1rem;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .lock-error.visible { opacity: 1; }
+
+        /* Unlock success pulse */
+        @keyframes unlockPulse {
+            0%   { box-shadow: 0 0 0 0 rgba(16,185,129,0.6); }
+            70%  { box-shadow: 0 0 0 20px rgba(16,185,129,0); }
+            100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+        }
+        .lock-dot.success {
+            background: var(--success) !important;
+            border-color: var(--success) !important;
+            animation: unlockPulse 0.6s ease;
+        }
+
+        @keyframes lockFadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== APP CONTAINER (hidden until unlocked) ===== */
+        #appContainer {
+            display: none;
+            width: 100%;
+            min-height: 100vh;
+            opacity: 0;
+            transition: opacity 0.4s ease 0.1s;
+        }
+        #appContainer.visible {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 260px; height: 100vh;
+            position: fixed; left: 0; top: 0;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--glass-border);
+            z-index: 200;
+            display: flex; flex-direction: column;
+            transition: transform var(--transition);
+            box-shadow: var(--shadow-lg);
+        }
+        .sidebar-header { padding: 1.5rem 1.2rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+        .sidebar-logo {
+            font-size: 1.6rem; font-weight: 900; letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--accent), var(--accent3));
+            background-clip: text; -webkit-background-clip: text; color: transparent;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .sidebar-nav { flex: 1; padding: 1rem 0.8rem; display: flex; flex-direction: column; gap: 0.3rem; overflow-y: auto; }
+        .sidebar-nav a, .sidebar-nav button {
+            display: flex; align-items: center; gap: 0.7rem;
+            padding: 0.7rem 1rem; border-radius: var(--radius-sm);
+            text-decoration: none; color: var(--text2); font-weight: 500;
+            transition: all var(--transition); border: none; background: transparent;
+            cursor: pointer; font-family: inherit; font-size: 0.9rem; width: 100%; text-align: left;
+        }
+        .sidebar-nav a:hover, .sidebar-nav button:hover, .sidebar-nav a.active {
+            background: var(--accent); color: #fff;
+            box-shadow: var(--glow); transform: translateX(3px);
+        }
+        .sidebar-nav a i { width: 20px; text-align: center; flex-shrink: 0; }
+        .sidebar-footer { padding: 1rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.5rem; flex-shrink: 0; }
+        .theme-toggle {
+            display: flex; align-items: center; gap: 0.6rem;
+            padding: 0.6rem 1rem; border-radius: var(--radius-sm);
+            cursor: pointer; border: 1px solid var(--border);
+            background: var(--surface2); color: var(--text);
+            font-family: inherit; font-size: 0.85rem;
+            transition: all var(--transition); width: 100%; justify-content: center;
+        }
+        .theme-toggle:hover { border-color: var(--accent); box-shadow: var(--glow); }
+        .sidebar-badge {
+            background: var(--accent); color: #fff;
+            border-radius: 20px; padding: 0.15rem 0.5rem;
+            font-size: 0.7rem; font-weight: 700; margin-left: auto; flex-shrink: 0;
+        }
+        .country-select {
+            padding: 0.45rem 0.8rem; border-radius: 2rem;
+            border: 1.5px solid var(--border); background: var(--surface2);
+            color: var(--text); font-family: inherit; font-size: 0.8rem;
+            font-weight: 600; cursor: pointer; width: 100%; margin-top: 0.5rem;
+        }
+
+        /* ===== MAIN LAYOUT ===== */
+        .main { margin-left: 260px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; transition: margin var(--transition); }
+        .topbar {
+            height: var(--navbar-h); min-height: var(--navbar-h);
+            background: var(--glass); backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 2rem; position: sticky; top: 0; z-index: 100;
+            gap: 1rem; flex-shrink: 0;
+        }
+        .topbar h2 { font-weight: 700; font-size: 1.2rem; color: var(--text); }
+        .topbar-actions { display: flex; gap: 0.7rem; align-items: center; }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            padding: 0.55rem 1.2rem; border-radius: var(--radius-xs);
+            font-weight: 600; font-family: inherit; font-size: 0.85rem;
+            cursor: pointer; border: none; transition: all var(--transition);
+            display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap;
+        }
+        .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; box-shadow: var(--glow); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,0,0,0.14); filter: brightness(1.1); }
+        .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+        .btn-outline:hover { border-color: var(--accent); }
+        .btn-sm { padding: 0.35rem 0.8rem; font-size: 0.75rem; border-radius: 2rem; }
+
+        .pulse { animation: pulse 2s infinite; }
         @keyframes pulse { 0%,100% { box-shadow:0 0 0 0 rgba(45,212,191,0.5); } 50% { box-shadow:0 0 0 14px rgba(45,212,191,0); } }
-        .content { padding:1.5rem 2rem 3rem; flex:1; display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; align-content:start; }
-        .panel { background:var(--surface); border-radius:var(--radius); padding:1.4rem; border:1px solid var(--border); box-shadow:var(--shadow); transition:all var(--transition); display:flex; flex-direction:column; scroll-margin-top:calc(var(--navbar-h) + 1rem); }
-        .panel:hover { box-shadow:var(--shadow-lg); }
-        .panel.full-width { grid-column:1 / -1; }
-        .panel-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem; flex-shrink:0; }
-        .panel-header h3 { font-size:1.1rem; font-weight:700; color:var(--text); display:flex; align-items:center; gap:0.5rem; }
-        .panel-header h3 i { color:var(--accent); flex-shrink:0; }
-        .stats-row { display:flex; gap:1rem; flex-wrap:wrap; grid-column:1 / -1; scroll-margin-top:calc(var(--navbar-h) + 1rem); }
-        .stat-card { flex:1; min-width:140px; background:var(--surface); border-radius:var(--radius); padding:1.2rem; border:1px solid var(--border); box-shadow:var(--shadow); text-align:center; transition:all var(--transition); cursor:default; }
-        .stat-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-lg); border-color:var(--accent); }
-        .stat-value { font-size:2.4rem; font-weight:900; color:var(--accent); font-family:'Courier New',monospace; }
-        .stat-label { font-size:0.8rem; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; font-weight:600; }
-        .stat-card.warning .stat-value { color:var(--warning); }
-        .stat-card.success .stat-value { color:var(--success); }
-        form { display:flex; flex-direction:column; gap:0.65rem; flex-shrink:0; }
-        input, select, textarea { padding:0.65rem 1rem; border-radius:var(--radius-xs); border:1.5px solid var(--border); font-family:inherit; font-size:0.9rem; background:var(--surface2); color:var(--text); transition:all var(--transition); width:100%; }
-        input:focus, select:focus, textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 4px rgba(45,212,191,0.12); background:var(--surface); }
-        .form-row { display:flex; gap:0.5rem; }
-        .form-row input, .form-row select { flex:1; }
-        .card-list { max-height:380px; overflow-y:auto; display:flex; flex-direction:column; gap:0.6rem; padding-right:0.3rem; flex:1; min-height:0; }
-        .card-item { background:var(--surface2); border-radius:var(--radius-sm); padding:0.8rem 1rem; border-left:5px solid var(--border); transition:all var(--transition); display:flex; justify-content:space-between; align-items:flex-start; gap:0.6rem; flex-wrap:wrap; cursor:default; flex-shrink:0; }
-        .card-item:hover { background:var(--surface); box-shadow:var(--shadow); transform:translateX(3px); }
-        .card-item.priority-critical { border-left-color:#ef4444; animation:urgentPulse 2s infinite; }
-        .card-item.priority-high { border-left-color:#f97316; }
-        .card-item.priority-mid { border-left-color:#f59e0b; }
-        .card-item.priority-low { border-left-color:#10b981; }
-        @keyframes urgentPulse { 0%,100% { box-shadow:inset 0 0 0 rgba(239,68,68,0); } 50% { box-shadow:inset 0 0 20px rgba(239,68,68,0.15); } }
-        .card-info { flex:2; min-width:150px; }
-        .card-info strong { display:block; font-size:0.95rem; }
-        .badge { display:inline-block; padding:0.2rem 0.6rem; border-radius:2rem; font-size:0.68rem; font-weight:600; margin:0.1rem; letter-spacing:0.3px; }
-        .badge-loc { background:#dbeafe; color:#1e40af; }
-        .badge-skill { background:#fef3c7; color:#92400e; }
-        .badge-avail { background:#d1fae5; color:#065f46; }
-        .badge-urg { background:#ffedd5; color:#9a3412; }
-        [data-theme="dark"] .badge-loc { background:#1e3a5f; color:#93c5fd; }
-        [data-theme="dark"] .badge-skill { background:#3d2e0a; color:#fcd34d; }
-        [data-theme="dark"] .badge-avail { background:#0a3d2e; color:#6ee7b7; }
-        [data-theme="dark"] .badge-urg { background:#3d1a0a; color:#fdba74; }
-        .card-actions { display:flex; gap:0.35rem; flex-wrap:wrap; }
-        .icon-btn { padding:0.3rem 0.7rem; border-radius:2rem; font-size:0.72rem; font-weight:600; cursor:pointer; border:none; transition:all var(--transition); font-family:inherit; }
-        .icon-btn.assign { background:#ccfbf1; color:#0f766e; }
-        .icon-btn.assign:hover { background:var(--accent); color:#fff; }
-        .icon-btn.del { background:#ffe4e6; color:#be123c; }
-        .icon-btn.del:hover { background:var(--danger); color:#fff; }
-        [data-theme="dark"] .icon-btn.assign { background:#0a3d2e; color:#5eead4; }
-        [data-theme="dark"] .icon-btn.del { background:#3d0a0a; color:#fca5a5; }
-        .map-wrap { flex:1; min-height:300px; height:380px; border-radius:var(--radius-sm); overflow:hidden; border:2px solid var(--accent); position:relative; }
-        #reliefMap { height:100%; width:100%; }
-        .leaflet-pane { z-index:1 !important; }
-        .leaflet-top, .leaflet-bottom { z-index:50 !important; }
-        .leaflet-control { z-index:51 !important; }
-        .leaflet-popup-pane { z-index:100 !important; }
-        .map-legend { position:absolute; bottom:12px; right:12px; background:var(--glass); backdrop-filter:blur(12px); border-radius:var(--radius-xs); padding:0.5rem 0.8rem; font-size:0.7rem; z-index:92; border:1px solid var(--border); display:flex; gap:0.8rem; flex-wrap:wrap; pointer-events:none; }
-        .map-legend span { display:flex; align-items:center; gap:0.3rem; }
-        .legend-dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
-        .toast-container { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:400; display:flex; flex-direction:column; gap:0.5rem; pointer-events:none; }
-        .toast { background:#1e293b; color:#fff; padding:0.7rem 1.4rem; border-radius:3rem; font-size:0.85rem; font-weight:500; pointer-events:auto; animation:toastIn 0.4s ease, toastOut 0.4s ease 1.8s forwards; box-shadow:var(--shadow-lg); text-align:center; white-space:nowrap; }
+
+        /* ===== CONTENT GRID ===== */
+        .content {
+            padding: 1.5rem 2rem 3rem; flex: 1;
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 1.5rem; align-content: start;
+        }
+        .panel {
+            background: var(--surface); border-radius: var(--radius);
+            padding: 1.4rem; border: 1px solid var(--border);
+            box-shadow: var(--shadow); transition: all var(--transition);
+            display: flex; flex-direction: column;
+            scroll-margin-top: calc(var(--navbar-h) + 1rem);
+        }
+        .panel:hover { box-shadow: var(--shadow-lg); }
+        .panel.full-width { grid-column: 1 / -1; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; flex-shrink: 0; }
+        .panel-header h3 { font-size: 1.1rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 0.5rem; }
+        .panel-header h3 i { color: var(--accent); flex-shrink: 0; }
+
+        /* ===== STATS ===== */
+        .stats-row { display: flex; gap: 1rem; flex-wrap: wrap; grid-column: 1 / -1; scroll-margin-top: calc(var(--navbar-h) + 1rem); }
+        .stat-card {
+            flex: 1; min-width: 140px; background: var(--surface);
+            border-radius: var(--radius); padding: 1.2rem;
+            border: 1px solid var(--border); box-shadow: var(--shadow);
+            text-align: center; transition: all var(--transition); cursor: default;
+        }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--accent); }
+        .stat-value { font-size: 2.4rem; font-weight: 900; color: var(--accent); font-family: 'Courier New', monospace; }
+        .stat-label { font-size: 0.8rem; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .stat-card.warning .stat-value { color: var(--warning); }
+        .stat-card.success .stat-value { color: var(--success); }
+
+        /* ===== FORMS ===== */
+        form { display: flex; flex-direction: column; gap: 0.65rem; flex-shrink: 0; }
+        input, select, textarea {
+            padding: 0.65rem 1rem; border-radius: var(--radius-xs);
+            border: 1.5px solid var(--border); font-family: inherit;
+            font-size: 0.9rem; background: var(--surface2); color: var(--text);
+            transition: all var(--transition); width: 100%;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none; border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(45,212,191,0.12); background: var(--surface);
+        }
+        .form-row { display: flex; gap: 0.5rem; }
+        .form-row input, .form-row select { flex: 1; }
+
+        /* ===== CARD LISTS ===== */
+        .card-list { max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.6rem; padding-right: 0.3rem; flex: 1; min-height: 0; }
+        .card-item {
+            background: var(--surface2); border-radius: var(--radius-sm);
+            padding: 0.8rem 1rem; border-left: 5px solid var(--border);
+            transition: all var(--transition); display: flex;
+            justify-content: space-between; align-items: flex-start;
+            gap: 0.6rem; flex-wrap: wrap; cursor: default; flex-shrink: 0;
+        }
+        .card-item:hover { background: var(--surface); box-shadow: var(--shadow); transform: translateX(3px); }
+        .card-item.priority-critical { border-left-color: #ef4444; animation: urgentPulse 2s infinite; }
+        .card-item.priority-high { border-left-color: #f97316; }
+        .card-item.priority-mid { border-left-color: #f59e0b; }
+        .card-item.priority-low { border-left-color: #10b981; }
+        @keyframes urgentPulse { 0%,100% { box-shadow: inset 0 0 0 rgba(239,68,68,0); } 50% { box-shadow: inset 0 0 20px rgba(239,68,68,0.15); } }
+        .card-info { flex: 2; min-width: 150px; }
+        .card-info strong { display: block; font-size: 0.95rem; }
+
+        /* ===== BADGES ===== */
+        .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 2rem; font-size: 0.68rem; font-weight: 600; margin: 0.1rem; letter-spacing: 0.3px; }
+        .badge-loc { background: #dbeafe; color: #1e40af; }
+        .badge-skill { background: #fef3c7; color: #92400e; }
+        .badge-avail { background: #d1fae5; color: #065f46; }
+        .badge-urg { background: #ffedd5; color: #9a3412; }
+        [data-theme="dark"] .badge-loc { background: #1e3a5f; color: #93c5fd; }
+        [data-theme="dark"] .badge-skill { background: #3d2e0a; color: #fcd34d; }
+        [data-theme="dark"] .badge-avail { background: #0a3d2e; color: #6ee7b7; }
+        [data-theme="dark"] .badge-urg { background: #3d1a0a; color: #fdba74; }
+
+        /* ===== ACTION BUTTONS IN CARDS ===== */
+        .card-actions { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+        .icon-btn { padding: 0.3rem 0.7rem; border-radius: 2rem; font-size: 0.72rem; font-weight: 600; cursor: pointer; border: none; transition: all var(--transition); font-family: inherit; }
+        .icon-btn.assign { background: #ccfbf1; color: #0f766e; }
+        .icon-btn.assign:hover { background: var(--accent); color: #fff; }
+        .icon-btn.del { background: #ffe4e6; color: #be123c; }
+        .icon-btn.del:hover { background: var(--danger); color: #fff; }
+        [data-theme="dark"] .icon-btn.assign { background: #0a3d2e; color: #5eead4; }
+        [data-theme="dark"] .icon-btn.del { background: #3d0a0a; color: #fca5a5; }
+
+        /* ===== MAP ===== */
+        .map-wrap { flex: 1; min-height: 300px; height: 380px; border-radius: var(--radius-sm); overflow: hidden; border: 2px solid var(--accent); position: relative; }
+        #reliefMap { height: 100%; width: 100%; }
+        .leaflet-pane { z-index: 1 !important; }
+        .leaflet-top, .leaflet-bottom { z-index: 50 !important; }
+        .leaflet-control { z-index: 51 !important; }
+        .leaflet-popup-pane { z-index: 100 !important; }
+        .map-legend { position: absolute; bottom: 12px; right: 12px; background: var(--glass); backdrop-filter: blur(12px); border-radius: var(--radius-xs); padding: 0.5rem 0.8rem; font-size: 0.7rem; z-index: 92; border: 1px solid var(--border); display: flex; gap: 0.8rem; flex-wrap: wrap; pointer-events: none; }
+        .map-legend span { display: flex; align-items: center; gap: 0.3rem; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+        /* ===== TOAST ===== */
+        .toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 400; display: flex; flex-direction: column; gap: 0.5rem; pointer-events: none; }
+        .toast {
+            background: #1e293b; color: #fff; padding: 0.7rem 1.4rem;
+            border-radius: 3rem; font-size: 0.85rem; font-weight: 500;
+            pointer-events: auto;
+            animation: toastIn 0.4s ease, toastOut 0.4s ease 1.8s forwards;
+            box-shadow: var(--shadow-lg); text-align: center; white-space: nowrap;
+        }
         @keyframes toastIn { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
         @keyframes toastOut { from { opacity:1; } to { opacity:0; transform:translateY(-20px); } }
-        .chart-wrap { height:200px; position:relative; flex-shrink:0; }
-        .chart-wrap canvas { width:100% !important; height:100% !important; }
-        .empty-state { text-align:center; padding:2rem; color:var(--text2); font-style:italic; }
-        .empty-state i { font-size:2rem; display:block; margin-bottom:0.5rem; opacity:0.5; }
+
+        /* ===== CHART ===== */
+        .chart-wrap { height: 200px; position: relative; flex-shrink: 0; }
+        .chart-wrap canvas { width: 100% !important; height: 100% !important; }
+        .empty-state { text-align: center; padding: 2rem; color: var(--text2); font-style: italic; }
+        .empty-state i { font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.5; }
+
+        /* ===== EMERGENCY MODE ===== */
         body.emergency-mode::before { content:''; position:fixed; inset:0; pointer-events:none; z-index:9999; border:4px solid #ef4444; animation:emergencyBorder 1s ease-in-out infinite; }
         @keyframes emergencyBorder { 0%,100% { opacity:1; box-shadow:inset 0 0 60px rgba(239,68,68,0.18); } 50% { opacity:0.3; box-shadow:none; } }
         body.emergency-mode .topbar { animation:topbarFlash 1.4s ease-in-out infinite; border-bottom:2px solid #ef4444; }
@@ -148,29 +545,12 @@
         .emergency-banner { display:none; position:sticky; top:var(--navbar-h); z-index:98; background:linear-gradient(90deg,#dc2626,#ef4444,#dc2626); background-size:200% 100%; animation:bannerScroll 2s linear infinite; color:#fff; text-align:center; font-weight:700; font-size:0.88rem; padding:0.55rem 1rem; }
         @keyframes bannerScroll { 0% { background-position:0% 0%; } 100% { background-position:200% 0%; } }
         body.emergency-mode .emergency-banner { display:block; }
-        .demo-fab { position:fixed; bottom:28px; right:28px; z-index:300; background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; border:none; border-radius:3rem; padding:0.8rem 1.4rem; font-size:0.92rem; font-weight:700; cursor:pointer; box-shadow:0 8px 24px rgba(124,58,237,0.45); display:flex; align-items:center; gap:0.5rem; }
-        .demo-fab:hover { transform:translateY(-3px) scale(1.04); }
-        @media (max-width:1100px) {
-            .content { grid-template-columns:1fr; padding:1rem 1.2rem 2rem; gap:1rem; }
-            .sidebar { transform:translateX(-100%); }
-            .sidebar.open { transform:translateX(0); }
-            .main { margin-left:0; }
-            .topbar { padding:0 1rem; }
-            .hamburger { display:block !important; font-size:1.4rem; cursor:pointer; background:none; border:none; color:var(--text); }
-            .demo-fab { bottom:16px; right:16px; padding:0.6rem 1rem; font-size:0.8rem; }
-            .map-wrap { height:300px; min-height:250px; }
-        }
-        @media (min-width:1101px) { .hamburger { display:none !important; } }
-        @media (max-width:600px) {
-            .stats-row { flex-direction:column; }
-            .stat-card { min-width:auto; }
-            .form-row { flex-direction:column; }
-            .topbar h2 { font-size:1rem; }
-            .content { padding:0.8rem; gap:0.8rem; }
-            .map-wrap { height:260px; min-height:220px; }
-        }
-        .loading-spinner { display:inline-block; width:12px; height:12px; border:2px solid rgba(255,255,255,0.3); border-radius:50%; border-top-color:#fff; animation:spin 0.6s linear infinite; margin-right:6px; }
-        @keyframes spin { to { transform:rotate(360deg); } }
+
+        /* ===== DEMO FAB ===== */
+        .demo-fab { position: fixed; bottom: 28px; right: 28px; z-index: 300; background: linear-gradient(135deg,#7c3aed,#a855f7); color: #fff; border: none; border-radius: 3rem; padding: 0.8rem 1.4rem; font-size: 0.92rem; font-weight: 700; cursor: pointer; box-shadow: 0 8px 24px rgba(124,58,237,0.45); display: flex; align-items: center; gap: 0.5rem; }
+        .demo-fab:hover { transform: translateY(-3px) scale(1.04); }
+
+        /* ===== TOUR ===== */
         .tour-spotlight { position:fixed; border:3px solid #a855f7; border-radius:12px; pointer-events:none; z-index:1001; display:none; box-shadow:0 0 32px rgba(168,85,247,0.8); transition:all 0.2s; background:rgba(168,85,247,0.05); }
         .tour-spotlight.active { display:block; }
         .tour-tooltip { position:fixed; z-index:1002; background:linear-gradient(145deg,#1e1b4b,#312e81); color:#e0e7ff; border-radius:1.2rem; padding:1.2rem 1.4rem; max-width:340px; box-shadow:0 20px 48px rgba(0,0,0,0.5); font-size:0.88rem; display:none; }
@@ -184,45 +564,100 @@
         .tour-dot { width:6px; height:6px; border-radius:50%; background:rgba(165,180,252,0.3); }
         .tour-dot.active { background:#a855f7; transform:scale(1.3); }
         .tour-dot.done { background:#6d28d9; }
+
+        /* ===== FILTER MODAL ===== */
         .filter-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:500; align-items:center; justify-content:center; }
         .filter-modal-overlay.open { display:flex; }
         .filter-modal { background:var(--surface); border-radius:var(--radius); padding:1.6rem; min-width:300px; box-shadow:var(--shadow-lg); display:flex; flex-direction:column; gap:1rem; }
         .filter-modal h4 { font-size:1rem; font-weight:700; }
         .filter-modal-actions { display:flex; gap:0.5rem; justify-content:flex-end; }
+
+        /* ===== LOADING SPINNER ===== */
+        .loading-spinner { display:inline-block; width:12px; height:12px; border:2px solid rgba(255,255,255,0.3); border-radius:50%; border-top-color:#fff; animation:spin 0.6s linear infinite; margin-right:6px; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1100px) {
+            .content { grid-template-columns: 1fr; padding: 1rem 1.2rem 2rem; gap: 1rem; }
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main { margin-left: 0; }
+            .topbar { padding: 0 1rem; }
+            .hamburger { display: block !important; font-size: 1.4rem; cursor: pointer; background: none; border: none; color: var(--text); }
+            .demo-fab { bottom: 16px; right: 16px; padding: 0.6rem 1rem; font-size: 0.8rem; }
+            .map-wrap { height: 300px; min-height: 250px; }
+
+            /* Lockscreen responsive */
+            .keypad-grid { grid-template-columns: repeat(3, 76px); grid-template-rows: repeat(3, 76px); gap: 0.85rem; }
+            .key-btn, .key-spacer { width: 76px; height: 76px; }
+        }
+        @media (min-width: 1101px) { .hamburger { display: none !important; } }
+
+        @media (max-width: 600px) {
+            .stats-row { flex-direction: column; }
+            .stat-card { min-width: auto; }
+            .form-row { flex-direction: column; }
+            .topbar h2 { font-size: 1rem; }
+            .content { padding: 0.8rem; gap: 0.8rem; }
+            .map-wrap { height: 260px; min-height: 220px; }
+
+            .keypad-grid { grid-template-columns: repeat(3, 72px); grid-template-rows: repeat(3, 72px); gap: 0.75rem; }
+            .key-btn, .key-spacer { width: 72px; height: 72px; }
+            .key-btn { font-size: 1.5rem; }
+            .passcode-display { font-size: 1.35rem; letter-spacing: 0.28rem; }
+        }
     </style>
 </head>
 <body>
-    <!-- SIMPLE iOS PASSCODE AUTH (no heading, no extra text) -->
-    <div class="auth-container" id="authContainer">
-        <div class="auth-card">
-            <!-- Only passcode number, dots, and keypad -->
-            <div class="passcode-display" id="passcodeDisplay">-----</div>
-            <div class="dots-container" id="dotsContainer">
-                <div class="dot" id="dot0"></div>
-                <div class="dot" id="dot1"></div>
-                <div class="dot" id="dot2"></div>
-                <div class="dot" id="dot3"></div>
-                <div class="dot" id="dot4"></div>
+
+    <!-- ===== LOCKSCREEN (no branding) ===== -->
+    <div id="lockScreen" role="main" aria-label="Passcode Lock Screen">
+        <div class="lock-inner">
+            <div class="passcode-display-wrap">
+                <div class="passcode-label">Enter this passcode</div>
+                <div class="passcode-display" id="passcodeDisplay" aria-live="polite">— — — — —</div>
             </div>
-            <div class="keypad">
-                <button data-key="1">1</button>
-                <button data-key="2">2</button>
-                <button data-key="3">3</button>
-                <button data-key="4">4</button>
-                <button data-key="5">5</button>
-                <button data-key="6">6</button>
-                <button data-key="7">7</button>
-                <button data-key="8">8</button>
-                <button data-key="9">9</button>
+
+            <div class="dots-row" id="dotsRow" aria-label="Passcode progress">
+                <div class="lock-dot" id="dot0" aria-hidden="true"></div>
+                <div class="lock-dot" id="dot1" aria-hidden="true"></div>
+                <div class="lock-dot" id="dot2" aria-hidden="true"></div>
+                <div class="lock-dot" id="dot3" aria-hidden="true"></div>
+                <div class="lock-dot" id="dot4" aria-hidden="true"></div>
             </div>
-            <div class="auth-error" id="authError">Incorrect passcode</div>
+
+            <div class="keypad-grid" role="group" aria-label="Numeric keypad">
+                <button class="key-btn" data-key="1" aria-label="1">1</button>
+                <button class="key-btn" data-key="2" aria-label="2">2</button>
+                <button class="key-btn" data-key="3" aria-label="3">3</button>
+                <button class="key-btn" data-key="4" aria-label="4">4</button>
+                <button class="key-btn" data-key="5" aria-label="5">5</button>
+                <button class="key-btn" data-key="6" aria-label="6">6</button>
+                <button class="key-btn" data-key="7" aria-label="7">7</button>
+                <button class="key-btn" data-key="8" aria-label="8">8</button>
+                <button class="key-btn" data-key="9" aria-label="9">9</button>
+            </div>
+
+            <!-- Bottom row: empty | empty | backspace -->
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:1rem;width:100%;max-width:calc(3 * 82px + 2 * 1rem);justify-items:center;">
+                <div></div>
+                <div></div>
+                <button class="key-btn key-back" id="backspaceBtn" aria-label="Delete last digit">
+                    <i class="fas fa-delete-left"></i>
+                </button>
+            </div>
+
+            <div class="lock-error" id="lockError" aria-live="assertive">Incorrect passcode — try again</div>
         </div>
     </div>
 
-    <!-- MAIN APP (hidden until authenticated) -->
-    <div id="appContainer" style="display:none; width:100%;">
+    <!-- ===== MAIN APP ===== -->
+    <div id="appContainer">
         <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header"><div class="sidebar-logo"><i class="fas fa-hand-holding-heart"></i> ReliefOS</div><small style="color:var(--text2);font-size:0.7rem;">Pro Max • Gemini 1.5 Pro</small></div>
+            <div class="sidebar-header">
+                <div class="sidebar-logo"><i class="fas fa-hand-holding-heart"></i> ReliefOS</div>
+                <small style="color:var(--text2);font-size:0.7rem;">Pro Max • Gemini 1.5 Pro</small>
+            </div>
             <nav class="sidebar-nav">
                 <a href="#dashboard" class="active" data-nav="dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
                 <a href="#tasks-section" data-nav="tasks"><i class="fas fa-tasks"></i> Tasks <span class="sidebar-badge" id="taskCountBadge">0</span></a>
@@ -230,13 +665,20 @@
                 <a href="#map-section" data-nav="map"><i class="fas fa-map-marked-alt"></i> Live Map</a>
                 <a href="#analytics-section" data-nav="analytics"><i class="fas fa-chart-bar"></i> Analytics</a>
                 <button onclick="window.exportData()"><i class="fas fa-download"></i> Export Report</button>
-                <select id="countrySelectSidebar" class="country-select" onchange="window.loadCountryDemo(this.value)" style="width:100%; margin-top:0.4rem;">
+                <select id="countrySelectSidebar" class="country-select" onchange="window.loadCountryDemo(this.value)">
                     <option value="none">🌐 None (Live Firebase)</option>
-                    <option value="india">🇮🇳 India</option><option value="usa">🇺🇸 USA</option><option value="japan">🇯🇵 Japan</option><option value="brazil">🇧🇷 Brazil</option>
+                    <option value="india">🇮🇳 India</option>
+                    <option value="usa">🇺🇸 USA</option>
+                    <option value="japan">🇯🇵 Japan</option>
+                    <option value="brazil">🇧🇷 Brazil</option>
                 </select>
             </nav>
-            <div class="sidebar-footer"><button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i> <span>Dark Mode</span></button><small style="text-align:center;color:var(--text2);font-size:0.7rem;">© 2025 ReliefOS</small></div>
+            <div class="sidebar-footer">
+                <button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i> <span>Dark Mode</span></button>
+                <small style="text-align:center;color:var(--text2);font-size:0.7rem;">© 2025 ReliefOS</small>
+            </div>
         </aside>
+
         <div class="main" id="mainContent">
             <header class="topbar" id="topbar">
                 <button class="hamburger" id="hamburgerBtn"><i class="fas fa-bars"></i></button>
@@ -246,7 +688,9 @@
                     <button id="emergencyBtn" class="btn btn-primary btn-sm pulse" onclick="window.triggerEmergencyMode()"><i class="fas fa-exclamation-triangle"></i> Emergency</button>
                 </div>
             </header>
+
             <div class="emergency-banner" id="emergencyBanner">HIGH ALERT — EMERGENCY MODE ACTIVE | ALL UNITS RESPOND IMMEDIATELY |</div>
+
             <div class="content" id="contentArea">
                 <div class="stats-row" id="statsRow">
                     <div class="stat-card"><div class="stat-value" id="statTasks">0</div><div class="stat-label">Active Tasks</div></div>
@@ -254,18 +698,83 @@
                     <div class="stat-card success"><div class="stat-value" id="statAvailVols">0</div><div class="stat-label">Available Volunteers</div></div>
                     <div class="stat-card"><div class="stat-value" id="statMatched">0</div><div class="stat-label">AI Matches</div></div>
                 </div>
-                <div class="panel" id="tasks-section"><div class="panel-header"><h3><i class="fas fa-plus-circle"></i> Create Task</h3></div>
-                    <form id="taskForm"><input type="text" id="taskName" placeholder="Task name" required><div class="form-row"><input type="text" id="taskLocation" placeholder="Exact Location" required><select id="taskCategory"><option value="medical">Medical</option><option value="food">Food</option><option value="shelter">Shelter</option><option value="rescue">Rescue</option><option value="logistics">Logistics</option><option value="other">Other</option></select></div><div class="form-row"><input type="number" id="urgency" placeholder="Urgency (1-5)" min="1" max="5" required><input type="number" id="people" placeholder="People Affected" min="1" required><input type="text" id="skill" placeholder="Required Skill" required></div><button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Create Task</button></form><div id="smartMatchBanner" style="margin-top:0.5rem;padding:0.5rem;border-radius:0.5rem;background:var(--surface2);display:none;font-size:0.8rem;color:var(--accent);text-align:center;"></div>
+
+                <div class="panel" id="tasks-section">
+                    <div class="panel-header"><h3><i class="fas fa-plus-circle"></i> Create Task</h3></div>
+                    <form id="taskForm">
+                        <input type="text" id="taskName" placeholder="Task name" required>
+                        <div class="form-row">
+                            <input type="text" id="taskLocation" placeholder="Exact Location" required>
+                            <select id="taskCategory">
+                                <option value="medical">Medical</option><option value="food">Food</option>
+                                <option value="shelter">Shelter</option><option value="rescue">Rescue</option>
+                                <option value="logistics">Logistics</option><option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <input type="number" id="urgency" placeholder="Urgency (1-5)" min="1" max="5" required>
+                            <input type="number" id="people" placeholder="People Affected" min="1" required>
+                            <input type="text" id="skill" placeholder="Required Skill" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Create Task</button>
+                    </form>
+                    <div id="smartMatchBanner" style="margin-top:0.5rem;padding:0.5rem;border-radius:0.5rem;background:var(--surface2);display:none;font-size:0.8rem;color:var(--accent);text-align:center;"></div>
                 </div>
-                <div class="panel" id="volunteers-section"><div class="panel-header"><h3><i class="fas fa-user-plus"></i> Register Volunteer</h3></div>
-                    <form id="volunteerForm"><input type="text" id="volunteerName" placeholder="Full name" required><div class="form-row"><input type="text" id="volunteerSkills" placeholder="Skills (comma-separated)" required><input type="text" id="volunteerLocation" placeholder="Exact Location" required></div><div class="form-row"><input type="tel" id="volunteerContact" placeholder="Contact Number" required><select id="availability"><option value="true">Available</option><option value="false">Busy</option></select></div><button type="submit" class="btn btn-primary"><i class="fas fa-user-check"></i> Register Volunteer</button></form>
+
+                <div class="panel" id="volunteers-section">
+                    <div class="panel-header"><h3><i class="fas fa-user-plus"></i> Register Volunteer</h3></div>
+                    <form id="volunteerForm">
+                        <input type="text" id="volunteerName" placeholder="Full name" required>
+                        <div class="form-row">
+                            <input type="text" id="volunteerSkills" placeholder="Skills (comma-separated)" required>
+                            <input type="text" id="volunteerLocation" placeholder="Exact Location" required>
+                        </div>
+                        <div class="form-row">
+                            <input type="tel" id="volunteerContact" placeholder="Contact Number" required>
+                            <select id="availability"><option value="true">Available</option><option value="false">Busy</option></select>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-user-check"></i> Register Volunteer</button>
+                    </form>
                 </div>
-                <div class="panel full-width" id="map-section"><div class="panel-header"><h3><i class="fas fa-map-marked-alt"></i> Live Relief Map</h3><span style="font-size:0.7rem;color:var(--text2);">Real-time geocoded locations</span></div><div class="map-wrap"><div id="reliefMap"></div><div class="map-legend"><span><span class="legend-dot" style="background:#ef4444;"></span> Tasks</span><span><span class="legend-dot" style="background:#10b981;"></span> Available</span><span><span class="legend-dot" style="background:#f59e0b;"></span> Busy</span></div></div></div>
-                <div class="panel" id="taskListPanel"><div class="panel-header"><h3><i class="fas fa-list-check"></i> Active Tasks</h3><button class="btn btn-outline btn-sm" onclick="window.filterTasks()"><i class="fas fa-filter"></i> Filter</button></div><div class="card-list" id="taskList"></div></div>
-                <div class="panel" id="volListPanel"><div class="panel-header"><h3><i class="fas fa-people-group"></i> Volunteers</h3><button class="btn btn-outline btn-sm" onclick="window.filterVolunteers()"><i class="fas fa-filter"></i> Filter</button></div><div class="card-list" id="volunteerList"></div></div>
-                <div class="panel full-width" id="analytics-section"><div class="panel-header"><h3><i class="fas fa-chart-bar"></i> Analytics Overview</h3></div><div class="chart-wrap"><canvas id="analyticsChart"></canvas></div></div>
+
+                <div class="panel full-width" id="map-section">
+                    <div class="panel-header">
+                        <h3><i class="fas fa-map-marked-alt"></i> Live Relief Map</h3>
+                        <span style="font-size:0.7rem;color:var(--text2);">Real-time geocoded locations</span>
+                    </div>
+                    <div class="map-wrap">
+                        <div id="reliefMap"></div>
+                        <div class="map-legend">
+                            <span><span class="legend-dot" style="background:#ef4444;"></span> Tasks</span>
+                            <span><span class="legend-dot" style="background:#10b981;"></span> Available</span>
+                            <span><span class="legend-dot" style="background:#f59e0b;"></span> Busy</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel" id="taskListPanel">
+                    <div class="panel-header">
+                        <h3><i class="fas fa-list-check"></i> Active Tasks</h3>
+                        <button class="btn btn-outline btn-sm" onclick="window.filterTasks()"><i class="fas fa-filter"></i> Filter</button>
+                    </div>
+                    <div class="card-list" id="taskList"></div>
+                </div>
+
+                <div class="panel" id="volListPanel">
+                    <div class="panel-header">
+                        <h3><i class="fas fa-people-group"></i> Volunteers</h3>
+                        <button class="btn btn-outline btn-sm" onclick="window.filterVolunteers()"><i class="fas fa-filter"></i> Filter</button>
+                    </div>
+                    <div class="card-list" id="volunteerList"></div>
+                </div>
+
+                <div class="panel full-width" id="analytics-section">
+                    <div class="panel-header"><h3><i class="fas fa-chart-bar"></i> Analytics Overview</h3></div>
+                    <div class="chart-wrap"><canvas id="analyticsChart"></canvas></div>
+                </div>
             </div>
         </div>
+
         <div class="filter-modal-overlay" id="filterModalOverlay">
             <div class="filter-modal">
                 <h4 id="filterModalTitle">Filter</h4>
@@ -276,8 +785,10 @@
                 </div>
             </div>
         </div>
+
         <div class="toast-container" id="toastContainer"></div>
         <button class="demo-fab" id="demoFab" onclick="window.startTour()"><i class="fas fa-play-circle"></i> Start Demo Tour</button>
+
         <div class="tour-spotlight" id="tourSpotlight"></div>
         <div class="tour-tooltip" id="tourTooltip">
             <div class="tour-step-label" id="tourStepLabel">STEP 1 / 10</div>
@@ -291,626 +802,830 @@
         </div>
     </div>
 
+    <!-- Firebase & Libraries -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
     <script>
-        (function(){
+    (function () {
+        'use strict';
+
+        /* ========================
+           THEME — apply saved theme immediately
+        ======================== */
+        const savedTheme = localStorage.getItem('reliefos_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+
+        /* ========================
+           LOCK SCREEN LOGIC
+        ======================== */
+        const lockScreen    = document.getElementById('lockScreen');
+        const appContainer  = document.getElementById('appContainer');
+        const passcodeDisp  = document.getElementById('passcodeDisplay');
+        const dotsRow       = document.getElementById('dotsRow');
+        const lockError     = document.getElementById('lockError');
+        const dots          = [0,1,2,3,4].map(i => document.getElementById('dot' + i));
+        const backspaceBtn  = document.getElementById('backspaceBtn');
+
+        // Generate random 5-digit passcode (digits 1-9 only)
+        const correctPasscode = Array.from({ length: 5 }, () =>
+            String(Math.floor(Math.random() * 9) + 1)
+        ).join('');
+
+        // Show it clearly
+        passcodeDisp.textContent = correctPasscode.split('').join('  ');
+
+        let entered = '';
+        let lockBusy = false; // prevent rapid input during shake/unlock
+
+        function updateDots() {
+            dots.forEach((dot, i) => {
+                if (i < entered.length) dot.classList.add('filled');
+                else dot.classList.remove('filled');
+            });
+        }
+
+        function showLockError() {
+            lockError.classList.add('visible');
+        }
+        function hideLockError() {
+            lockError.classList.remove('visible');
+        }
+
+        function shakeAndClear() {
+            lockBusy = true;
+            dotsRow.classList.remove('shake');
+            // Force reflow so animation restarts
+            void dotsRow.offsetWidth;
+            dotsRow.classList.add('shake');
+            showLockError();
+
+            setTimeout(() => {
+                entered = '';
+                updateDots();
+                dotsRow.classList.remove('shake');
+                lockBusy = false;
+            }, 480);
+        }
+
+        function unlockApp() {
+            lockBusy = true;
+            hideLockError();
+            // Flash dots green
+            dots.forEach(d => { d.classList.remove('filled'); d.classList.add('filled', 'success'); });
+
+            setTimeout(() => {
+                lockScreen.classList.add('unlocking');
+
+                // Show app
+                appContainer.style.display = 'flex';
+                appContainer.style.flexDirection = 'column'; // ensure flex
+                // Trigger reflow then fade in
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        appContainer.classList.add('visible');
+                    });
+                });
+
+                // Remove lock screen after transition
+                setTimeout(() => {
+                    lockScreen.style.display = 'none';
+                    lockBusy = false;
+                    if (!window._appInitialized) {
+                        window._appInitialized = true;
+                        initApp();
+                    }
+                }, 520);
+            }, 320);
+        }
+
+        function handleDigit(digit) {
+            if (lockBusy) return;
+            if (entered.length >= 5) return;
+            hideLockError();
+            entered += digit;
+            updateDots();
+
+            if (entered.length === 5) {
+                if (entered === correctPasscode) {
+                    unlockApp();
+                } else {
+                    shakeAndClear();
+                }
+            }
+        }
+
+        function handleBackspace() {
+            if (lockBusy) return;
+            if (entered.length === 0) return;
+            hideLockError();
+            entered = entered.slice(0, -1);
+            updateDots();
+        }
+
+        // Keypad buttons — pointer + touch events for smooth mobile
+        document.querySelectorAll('.key-btn[data-key]').forEach(btn => {
+            const digit = btn.dataset.key;
+
+            function onPress(e) {
+                e.preventDefault();
+                btn.classList.add('pressed');
+                handleDigit(digit);
+            }
+            function onRelease() { btn.classList.remove('pressed'); }
+
+            btn.addEventListener('pointerdown', onPress, { passive: false });
+            btn.addEventListener('pointerup', onRelease);
+            btn.addEventListener('pointercancel', onRelease);
+            // Fallback for browsers without pointer events
+            btn.addEventListener('touchstart', onPress, { passive: false });
+            btn.addEventListener('touchend', onRelease, { passive: true });
+        });
+
+        backspaceBtn.addEventListener('pointerdown', e => {
+            e.preventDefault();
+            backspaceBtn.classList.add('pressed');
+            handleBackspace();
+        });
+        backspaceBtn.addEventListener('pointerup', () => backspaceBtn.classList.remove('pressed'));
+        backspaceBtn.addEventListener('pointercancel', () => backspaceBtn.classList.remove('pressed'));
+        // Long-press backspace to clear all
+        let clearTimer;
+        backspaceBtn.addEventListener('pointerdown', () => {
+            clearTimer = setTimeout(() => {
+                entered = '';
+                updateDots();
+                hideLockError();
+            }, 600);
+        });
+        backspaceBtn.addEventListener('pointerup', () => clearTimeout(clearTimer));
+
+        // Keyboard support
+        document.addEventListener('keydown', e => {
+            if (lockScreen.style.display === 'none') return;
+            if (e.key >= '1' && e.key <= '9') { e.preventDefault(); handleDigit(e.key); }
+            else if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); handleBackspace(); }
+        });
+
+        /* ========================
+           APP INIT
+        ======================== */
+        function initApp() {
             // Firebase
-            const firebaseConfig = { apiKey: "AIzaSyAhlOE9REfvPUaOeHZEsOEpkcPXpPenp94", authDomain: "reliefos-1b4b5.firebaseapp.com", projectId: "reliefos-1b4b5", storageBucket: "reliefos-1b4b5.firebasestorage.app", messagingSenderId: "638272932158", appId: "1:638272932158:web:b8303ab3c7b90b9ccbc46f" };
-            firebase.initializeApp(firebaseConfig);
+            const firebaseConfig = {
+                apiKey: "AIzaSyAhlOE9REfvPUaOeHZEsOEpkcPXpPenp94",
+                authDomain: "reliefos-1b4b5.firebaseapp.com",
+                projectId: "reliefos-1b4b5",
+                storageBucket: "reliefos-1b4b5.firebasestorage.app",
+                messagingSenderId: "638272932158",
+                appId: "1:638272932158:web:b8303ab3c7b90b9ccbc46f"
+            };
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
             const db = firebase.firestore();
+            const tasksRef = db.collection("tasks");
+            const volunteersRef = db.collection("volunteers");
 
-            // ----- iOS PASSCODE LOGIC (1-9 only, visible passcode) -----
-            const authContainer = document.getElementById('authContainer');
-            const appContainer = document.getElementById('appContainer');
-            const passcodeDisplay = document.getElementById('passcodeDisplay');
-            const dotsContainer = document.getElementById('dotsContainer');
-            const authError = document.getElementById('authError');
-            const dots = [document.getElementById('dot0'), document.getElementById('dot1'), document.getElementById('dot2'), document.getElementById('dot3'), document.getElementById('dot4')];
+            let map, markerCluster, chartInstance;
+            let matchCount = parseInt(localStorage.getItem('reliefos_matchCount') || '0');
+            let tasksData = [], volsData = [];
+            let locationCache = {};
+            let mapUpdateTimer = null;
+            let emergencyActive = false;
+            let demoActive = false;
+            let firebaseUnsubscribes = [];
+            let taskFilterMinUrgency = 0;
+            let volFilterAvailOnly = false;
+            const geminiApiKey = "AIzaSyBZnDVLyzqtK-5I8D2zKGuRdasaNKcAnNw";
 
-            // Generate random 5-digit passcode (digits 1-9)
-            const correctPasscode = Array.from({length:5}, () => Math.floor(Math.random()*9)+1).join('');
-            passcodeDisplay.textContent = correctPasscode;
+            const escapeHtml = s => {
+                if (!s) return '';
+                return String(s).replace(/[&<>"']/g, c =>
+                    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]
+                );
+            };
 
-            let enteredDigits = '';
+            const showToast = (msg, icon = 'info-circle') => {
+                const t = document.createElement('div');
+                t.className = 'toast';
+                t.innerHTML = `<i class="fas fa-${icon}"></i> ${escapeHtml(String(msg))}`;
+                document.getElementById('toastContainer').appendChild(t);
+                setTimeout(() => t.remove(), 2400);
+            };
 
-            function updateDots() {
-                dots.forEach((dot, idx) => {
-                    if (idx < enteredDigits.length) dot.classList.add('filled');
-                    else dot.classList.remove('filled');
+            function showFilterModal(title, bodyHtml, onApply) {
+                document.getElementById('filterModalTitle').textContent = title;
+                document.getElementById('filterModalBody').innerHTML = bodyHtml;
+                const overlay = document.getElementById('filterModalOverlay');
+                overlay.classList.add('open');
+                const close = () => overlay.classList.remove('open');
+                document.getElementById('filterModalApply').onclick = () => { onApply(); close(); };
+                document.getElementById('filterModalCancel').onclick = close;
+                overlay.onclick = e => { if (e.target === overlay) close(); };
+            }
+
+            /* ---- TOUR ---- */
+            let tourActive = false, tourStepIdx = 0;
+            const TOUR_STEPS = [
+                { title: "Welcome to ReliefOS!", body: "This tour highlights key features.", target: null, pos: 'center' },
+                { title: "Dashboard Stats", body: "Live counts of tasks, urgent items, available volunteers, and AI matches.", target: '#statsRow', pos: 'below' },
+                { title: "Emergency Mode", body: "Click this button (or Ctrl+E) to activate emergency alerts.", target: '#emergencyBtn', pos: 'below' },
+                { title: "Create Task", body: "Add new relief tasks with location, urgency, and required skills.", target: '#tasks-section', pos: 'right' },
+                { title: "Register Volunteer", body: "Add volunteers with their skills, location, and contact info.", target: '#volunteers-section', pos: 'left' },
+                { title: "Live Map", body: "Tasks (red), available (green), and busy (orange) volunteers appear here.", target: '#map-section', pos: 'below' },
+                { title: "Active Tasks", body: "Click 'Gemini Assign' to let AI match the best volunteer.", target: '#taskListPanel', pos: 'right' },
+                { title: "Volunteers List", body: "Monitor status and delete if needed.", target: '#volListPanel', pos: 'left' },
+                { title: "Analytics Chart", body: "Task categories and volunteer availability overview.", target: '#analytics-section', pos: 'above' },
+                { title: "Tour Complete!", body: "You're ready to coordinate relief. Explore freely!", target: null, pos: 'center' }
+            ];
+
+            function positionSpotlight(targetEl, tooltipEl, pos) {
+                const spotlight = document.getElementById('tourSpotlight');
+                if (!targetEl) {
+                    spotlight.classList.remove('active');
+                    const vw = window.innerWidth, vh = window.innerHeight;
+                    tooltipEl.style.top = Math.max(10, vh/2 - 140) + 'px';
+                    tooltipEl.style.left = Math.max(10, vw/2 - 170) + 'px';
+                    tooltipEl.classList.add('active');
+                    return;
+                }
+                const rect = targetEl.getBoundingClientRect();
+                const pad = 8;
+                spotlight.style.top  = (rect.top  - pad) + 'px';
+                spotlight.style.left = (rect.left - pad) + 'px';
+                spotlight.style.width  = (rect.width  + pad*2) + 'px';
+                spotlight.style.height = (rect.height + pad*2) + 'px';
+                spotlight.classList.add('active');
+
+                const tw = 340, th = 220;
+                let top, left;
+                if      (pos === 'below') { top = rect.bottom + 15; left = rect.left; }
+                else if (pos === 'above') { top = rect.top - th - 15; left = rect.left; }
+                else if (pos === 'right') { top = rect.top; left = rect.right + 15; }
+                else if (pos === 'left')  { top = rect.top; left = rect.left - tw - 15; }
+                else { top = (window.innerHeight - th)/2; left = (window.innerWidth - tw)/2; }
+                top  = Math.max(10, Math.min(top,  window.innerHeight - th - 10));
+                left = Math.max(10, Math.min(left, window.innerWidth  - tw - 10));
+                tooltipEl.style.top  = top  + 'px';
+                tooltipEl.style.left = left + 'px';
+                tooltipEl.classList.add('active');
+            }
+
+            function showTourStep(idx) {
+                const step = TOUR_STEPS[idx];
+                document.getElementById('tourStepLabel').textContent = `STEP ${idx+1} / ${TOUR_STEPS.length}`;
+                document.getElementById('tourTooltipTitle').innerHTML = step.title;
+                document.getElementById('tourTooltipBody').innerHTML  = step.body;
+                document.getElementById('tourDots').innerHTML = TOUR_STEPS.map((_, i) =>
+                    `<div class="tour-dot ${i < idx ? 'done' : i === idx ? 'active' : ''}"></div>`
+                ).join('');
+
+                const tooltip   = document.getElementById('tourTooltip');
+                const spotlight = document.getElementById('tourSpotlight');
+                spotlight.classList.remove('active');
+                tooltip.classList.remove('active');
+
+                if (step.target) {
+                    const el = document.querySelector(step.target);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        setTimeout(() => positionSpotlight(el, tooltip, step.pos), 300);
+                    } else {
+                        positionSpotlight(null, tooltip, 'center');
+                    }
+                } else {
+                    positionSpotlight(null, tooltip, 'center');
+                }
+            }
+
+            window.startTour = function () {
+                if (tourActive) return;
+                tourActive = true; tourStepIdx = 0;
+                document.getElementById('demoFab').style.display = 'none';
+                showTourStep(0);
+                showToast('Guided tour started!', 'play-circle');
+            };
+            window.endTour = function () {
+                tourActive = false;
+                document.getElementById('tourSpotlight').classList.remove('active');
+                document.getElementById('tourTooltip').classList.remove('active');
+                document.getElementById('demoFab').style.display = 'flex';
+                showToast('Tour ended', 'check-circle');
+            };
+            window.tourNext = function () {
+                tourStepIdx++;
+                if (tourStepIdx >= TOUR_STEPS.length) { window.endTour(); return; }
+                showTourStep(tourStepIdx);
+            };
+            document.getElementById('tourNextBtn').onclick = () => window.tourNext();
+            document.getElementById('tourSkipBtn').onclick = () => window.endTour();
+
+            /* ---- MAP ---- */
+            function initMap() {
+                const tileUrl = document.documentElement.getAttribute('data-theme') === 'dark'
+                    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+                map = L.map('reliefMap').setView([20.5937, 78.9629], 5);
+                L.tileLayer(tileUrl, { attribution: '&copy; OSM | ReliefOS' }).addTo(map);
+                markerCluster = L.markerClusterGroup({ maxClusterRadius: 50 });
+                map.addLayer(markerCluster);
+            }
+
+            async function geocodeLocation(locName) {
+                if (!locName) return null;
+                const key = locName.toLowerCase().trim();
+                if (locationCache[key]) return locationCache[key];
+                try {
+                    const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locName)}&limit=1`);
+                    if (!resp.ok) return null;
+                    const data = await resp.json();
+                    if (data && data.length) {
+                        const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+                        locationCache[key] = coords;
+                        return coords;
+                    }
+                } catch(e) {}
+                return null;
+            }
+
+            function getMarkerColor(u) {
+                if (u >= 5) return '#dc2626';
+                if (u >= 4) return '#ef4444';
+                if (u >= 3) return '#f97316';
+                return '#f59e0b';
+            }
+
+            async function refreshMapMarkers() {
+                if (!map || !markerCluster) return;
+                markerCluster.clearLayers();
+                const all = [];
+                const tPromises = tasksData.map(async t => {
+                    const c = await geocodeLocation(t.location);
+                    if (!c) return null;
+                    const m = L.circleMarker(c, { radius:9, fillColor:getMarkerColor(t.urgency), color:'#fff', weight:2, fillOpacity:0.9 });
+                    m.bindPopup(`<b>${escapeHtml(t.name)}</b><br>${escapeHtml(t.location)}<br>Urgency: ${t.urgency}/5`);
+                    return m;
+                });
+                const vPromises = volsData.map(async v => {
+                    const c = await geocodeLocation(v.location);
+                    if (!c) return null;
+                    const color = v.available ? '#10b981' : '#f59e0b';
+                    const m = L.circleMarker(c, { radius:8, fillColor:color, color:'#fff', weight:2, fillOpacity:0.9 });
+                    m.bindPopup(`<b>${escapeHtml(v.name)}</b><br>${escapeHtml(v.location)}<br>${v.available?'Available':'Busy'}<br>${escapeHtml(v.skills)}`);
+                    return m;
+                });
+                const results = await Promise.all([...tPromises, ...vPromises]);
+                results.forEach(m => { if (m) { markerCluster.addLayer(m); all.push(m); } });
+                if (all.length) {
+                    try { map.fitBounds(L.featureGroup(all).getBounds().pad(0.15), { maxZoom: 12 }); }
+                    catch(e) { map.setView([20, 0], 3); }
+                }
+            }
+
+            function debounceMapRefresh() {
+                clearTimeout(mapUpdateTimer);
+                mapUpdateTimer = setTimeout(refreshMapMarkers, 800);
+            }
+
+            /* ---- STATS & CHART ---- */
+            function updateStats() {
+                document.getElementById('statTasks').textContent     = tasksData.length;
+                document.getElementById('statUrgent').textContent    = tasksData.filter(t => t.urgency >= 4).length;
+                document.getElementById('statAvailVols').textContent = volsData.filter(v => v.available).length;
+                document.getElementById('statMatched').textContent   = matchCount;
+                document.getElementById('taskCountBadge').textContent = tasksData.length;
+                document.getElementById('volCountBadge').textContent  = volsData.length;
+                updateChart();
+            }
+
+            function updateChart() {
+                const ctx = document.getElementById('analyticsChart');
+                if (!ctx) return;
+                if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+                const cats = ['medical','food','shelter','rescue','logistics','other'];
+                const catCounts = cats.map(c => tasksData.filter(t => (t.category||'other') === c).length);
+                const avail = volsData.filter(v => v.available).length;
+                const busy  = volsData.length - avail;
+                chartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Medical','Food','Shelter','Rescue','Logistics','Other','Avail Vols','Busy Vols'],
+                        datasets: [{
+                            label: 'Count',
+                            data: [...catCounts, avail, busy],
+                            backgroundColor: ['#ef4444','#f59e0b','#3b82f6','#8b5cf6','#10b981','#6b7280','#10b981','#f59e0b'],
+                            borderRadius: 8
+                        }]
+                    },
+                    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } } }
                 });
             }
 
-            function clearDotsWithShake() {
-                dotsContainer.classList.add('shake');
-                setTimeout(() => {
-                    dotsContainer.classList.remove('shake');
-                    enteredDigits = '';
-                    updateDots();
-                    authError.style.display = 'none';
-                }, 500);
+            /* ---- RENDER ---- */
+            function renderTaskList() {
+                const container = document.getElementById('taskList');
+                if (!container) return;
+                const filtered = taskFilterMinUrgency > 0
+                    ? tasksData.filter(t => t.urgency >= taskFilterMinUrgency)
+                    : tasksData;
+                if (!filtered.length) {
+                    container.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i>No tasks${taskFilterMinUrgency > 0 ? ' matching filter' : ' yet'}.</div>`;
+                    return;
+                }
+                container.innerHTML = filtered.map(t => {
+                    const pc = t.urgency >= 4 ? 'priority-critical' : t.urgency >= 3 ? 'priority-high' : '';
+                    return `<div class="card-item ${pc}" data-task-id="${escapeHtml(t.id)}">
+                        <div class="card-info">
+                            <strong>${escapeHtml(t.name)}</strong>
+                            <span class="badge badge-loc">${escapeHtml(t.location||'N/A')}</span>
+                            <span class="badge badge-urg">${t.urgency}/5</span>
+                            <span class="badge">${t.peopleAffected} affected</span>
+                            <span class="badge badge-skill">${escapeHtml(t.requiredSkill)}</span>
+                            <span class="badge">${escapeHtml(t.category||'other')}</span>
+                            <div style="font-size:0.7rem;color:var(--text2);">Priority: ${Math.round(t.priorityScore||0)}</div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="icon-btn assign" data-action="assign"
+                                data-tid="${escapeHtml(t.id)}" data-skill="${escapeHtml(t.requiredSkill)}"
+                                data-name="${escapeHtml(t.name)}" data-loc="${escapeHtml(t.location||'')}">
+                                <i class="fas fa-robot"></i> Gemini Assign
+                            </button>
+                            <button class="icon-btn del" data-action="delete-task" data-tid="${escapeHtml(t.id)}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>`;
+                }).join('');
             }
 
-            function handleDigit(digit) {
-                if (enteredDigits.length >= 5) return;
-                enteredDigits += digit;
-                updateDots();
-                authError.style.display = 'none';
-
-                if (enteredDigits.length === 5) {
-                    if (enteredDigits === correctPasscode) {
-                        authContainer.style.display = 'none';
-                        appContainer.style.display = 'block';
-                        if (!window._appInitialized) {
-                            window._appInitialized = true;
-                            initApp();
-                        }
-                    } else {
-                        authError.style.display = 'block';
-                        clearDotsWithShake();
-                    }
+            function renderVolunteerList() {
+                const container = document.getElementById('volunteerList');
+                if (!container) return;
+                const filtered = volFilterAvailOnly ? volsData.filter(v => v.available) : volsData;
+                if (!filtered.length) {
+                    container.innerHTML = `<div class="empty-state"><i class="fas fa-user-slash"></i>No volunteers${volFilterAvailOnly ? ' available' : ''}.</div>`;
+                    return;
                 }
+                container.innerHTML = filtered.map(v =>
+                    `<div class="card-item" data-vol-id="${escapeHtml(v.id)}">
+                        <div class="card-info">
+                            <strong>${escapeHtml(v.name)}</strong>
+                            <span class="badge badge-skill">${escapeHtml(v.skills)}</span>
+                            <span class="badge badge-loc">${escapeHtml(v.location)}</span>
+                            <span class="badge ${v.available ? 'badge-avail' : ''}">${v.available ? 'Available' : 'Busy'}</span>
+                            <div style="font-size:0.7rem;">${escapeHtml(v.contact)}</div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="icon-btn del" data-action="delete-vol" data-vid="${escapeHtml(v.id)}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>`
+                ).join('');
             }
 
-            function handleBackspace() {
-                if (enteredDigits.length > 0) {
-                    enteredDigits = enteredDigits.slice(0, -1);
-                    updateDots();
-                    authError.style.display = 'none';
-                    dotsContainer.classList.remove('shake');
-                }
-            }
-
-            document.querySelectorAll('.keypad button').forEach(btn => {
-                btn.addEventListener('click', () => handleDigit(btn.dataset.key));
-                btn.addEventListener('touchstart', () => btn.classList.add('pressed'));
-                btn.addEventListener('touchend', () => btn.classList.remove('pressed'));
-                btn.addEventListener('mousedown', () => btn.classList.add('pressed'));
-                btn.addEventListener('mouseup', () => btn.classList.remove('pressed'));
-            });
-
-            document.addEventListener('keydown', (e) => {
-                if (authContainer.style.display !== 'none') {
-                    if (e.key === 'Backspace' || e.key === 'Delete') {
-                        handleBackspace();
-                        e.preventDefault();
-                    } else if (e.key >= '1' && e.key <= '9') {
-                        handleDigit(e.key);
-                        e.preventDefault();
-                    }
-                }
-            });
-
-            // ----- APP LOGIC (unchanged) -----
-            function initApp() {
-                const tasksRef = db.collection("tasks");
-                const volunteersRef = db.collection("volunteers");
-
-                let map, markerCluster, chartInstance;
-                let matchCount = parseInt(localStorage.getItem('reliefos_matchCount') || '0');
-                let tasksData = [], volsData = [];
-                let locationCache = {};
-                let mapUpdateTimer = null;
-                let emergencyActive = false;
-                let demoActive = false;
-                let firebaseUnsubscribes = [];
-                let taskFilterMinUrgency = 0;
-                let volFilterAvailOnly = false;
-                const geminiApiKey = "AIzaSyBZnDVLyzqtK-5I8D2zKGuRdasaNKcAnNw";
-
-                window._firebaseUnsubscribes = firebaseUnsubscribes;
-
-                const escapeHtml = s => { if (!s) return ''; return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]); };
-                const showToast = (msg, icon='info-circle') => {
-                    const t = document.createElement('div');
-                    t.className = 'toast';
-                    t.innerHTML = `<i class="fas fa-${icon}"></i> ${escapeHtml(msg)}`;
-                    document.getElementById('toastContainer').appendChild(t);
-                    setTimeout(() => t.remove(), 2400);
-                };
-
-                function showFilterModal(title, bodyHtml, onApply) {
-                    document.getElementById('filterModalTitle').textContent = title;
-                    document.getElementById('filterModalBody').innerHTML = bodyHtml;
-                    document.getElementById('filterModalOverlay').classList.add('open');
-                    const applyBtn = document.getElementById('filterModalApply');
-                    const cancelBtn = document.getElementById('filterModalCancel');
-                    const close = () => document.getElementById('filterModalOverlay').classList.remove('open');
-                    applyBtn.onclick = () => { onApply(); close(); };
-                    cancelBtn.onclick = close;
-                    document.getElementById('filterModalOverlay').onclick = e => { if (e.target === document.getElementById('filterModalOverlay')) close(); };
-                }
-
-                // ---------- TOUR ----------
-                let tourActive = false, tourStepIdx = 0;
-                const TOUR_STEPS = [
-                    { title: "Welcome to ReliefOS!", body: "This tour highlights key features.", target: null, pos: 'center' },
-                    { title: "Dashboard Stats", body: "Live counts of tasks, urgent items, available volunteers, and AI matches.", target: '#statsRow', pos: 'below' },
-                    { title: "Emergency Mode", body: "Click this button (or Ctrl+E) to activate emergency alerts.", target: '#emergencyBtn', pos: 'below' },
-                    { title: "Create Task", body: "Add new relief tasks with location, urgency, and required skills.", target: '#tasks-section', pos: 'right' },
-                    { title: "Register Volunteer", body: "Add volunteers with their skills, location, and contact info.", target: '#volunteers-section', pos: 'left' },
-                    { title: "Live Map", body: "Tasks (red), available (green), and busy (orange) volunteers appear here.", target: '#map-section', pos: 'below' },
-                    { title: "Active Tasks", body: "Click 'Gemini Assign' to let AI match the best volunteer.", target: '#taskListPanel', pos: 'right' },
-                    { title: "Volunteers List", body: "Monitor status and delete if needed.", target: '#volListPanel', pos: 'left' },
-                    { title: "Analytics Chart", body: "Task categories and volunteer availability overview.", target: '#analytics-section', pos: 'above' },
-                    { title: "Tour Complete!", body: "You're ready to coordinate relief. Explore freely!", target: null, pos: 'center' }
-                ];
-                function positionSpotlight(targetEl, tooltipEl, pos) {
-                    if (!targetEl) {
-                        document.getElementById('tourSpotlight').classList.remove('active');
-                        const vw = window.innerWidth, vh = window.innerHeight;
-                        tooltipEl.style.top = (vh/2 - 140) + 'px';
-                        tooltipEl.style.left = (vw/2 - 170) + 'px';
-                        tooltipEl.classList.add('active');
-                        return;
-                    }
-                    const rect = targetEl.getBoundingClientRect();
-                    const pad = 8;
-                    const spotlight = document.getElementById('tourSpotlight');
-                    spotlight.style.top = (rect.top - pad) + 'px';
-                    spotlight.style.left = (rect.left - pad) + 'px';
-                    spotlight.style.width = (rect.width + pad*2) + 'px';
-                    spotlight.style.height = (rect.height + pad*2) + 'px';
-                    spotlight.classList.add('active');
-                    const tw = 340, th = 200;
-                    let top, left;
-                    if (pos === 'below') { top = rect.bottom + 15; left = rect.left; }
-                    else if (pos === 'above') { top = rect.top - th - 15; left = rect.left; }
-                    else if (pos === 'right') { top = rect.top; left = rect.right + 15; }
-                    else if (pos === 'left') { top = rect.top; left = rect.left - tw - 15; }
-                    else { top = (window.innerHeight - th)/2; left = (window.innerWidth - tw)/2; }
-                    top = Math.max(10, Math.min(top, window.innerHeight - th - 10));
-                    left = Math.max(10, Math.min(left, window.innerWidth - tw - 10));
-                    tooltipEl.style.top = top + 'px';
-                    tooltipEl.style.left = left + 'px';
-                    tooltipEl.classList.add('active');
-                }
-                function showTourStep(idx) {
-                    const step = TOUR_STEPS[idx];
-                    const total = TOUR_STEPS.length;
-                    document.getElementById('tourStepLabel').textContent = `STEP ${idx+1} / ${total}`;
-                    document.getElementById('tourTooltipTitle').innerHTML = step.title;
-                    document.getElementById('tourTooltipBody').innerHTML = step.body;
-                    const dotsHtml = TOUR_STEPS.map((_, i) => `<div class="tour-dot ${i<idx?'done':i===idx?'active':''}"></div>`).join('');
-                    document.getElementById('tourDots').innerHTML = dotsHtml;
-                    const tooltip = document.getElementById('tourTooltip');
-                    const spotlight = document.getElementById('tourSpotlight');
-                    spotlight.classList.remove('active');
-                    tooltip.classList.remove('active');
-                    if (step.target) {
-                        const el = document.querySelector(step.target);
-                        if (el) {
-                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            setTimeout(() => positionSpotlight(el, tooltip, step.pos), 300);
-                        } else { positionSpotlight(null, tooltip, 'center'); }
-                    } else { positionSpotlight(null, tooltip, 'center'); }
-                }
-                window.startTour = function() {
-                    if (tourActive) return;
-                    tourActive = true;
-                    tourStepIdx = 0;
-                    document.getElementById('demoFab').style.display = 'none';
-                    showTourStep(0);
-                    showToast('Guided tour started!', 'play-circle');
-                };
-                window.endTour = function() {
-                    tourActive = false;
-                    document.getElementById('tourSpotlight').classList.remove('active');
-                    document.getElementById('tourTooltip').classList.remove('active');
-                    document.getElementById('demoFab').style.display = 'flex';
-                    showToast('Tour ended', 'check-circle');
-                };
-                window.tourNext = function() {
-                    tourStepIdx++;
-                    if (tourStepIdx >= TOUR_STEPS.length) { window.endTour(); return; }
-                    showTourStep(tourStepIdx);
-                };
-                document.getElementById('tourNextBtn').onclick = () => window.tourNext();
-                document.getElementById('tourSkipBtn').onclick = () => window.endTour();
-
-                // Map & Geocoding
-                function initMap() {
-                    map = L.map('reliefMap').setView([20.5937, 78.9629], 5);
-                    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OSM | ReliefOS' }).addTo(map);
-                    markerCluster = L.markerClusterGroup({ maxClusterRadius: 50 });
-                    map.addLayer(markerCluster);
-                }
-                async function geocodeLocation(locName) {
-                    if (!locName) return null;
-                    const key = locName.toLowerCase().trim();
-                    if (locationCache[key]) return locationCache[key];
-                    try {
-                        const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locName)}&limit=1`);
-                        if (!resp.ok) return null;
-                        const data = await resp.json();
-                        if (data && data.length) {
-                            const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-                            locationCache[key] = coords;
-                            return coords;
-                        }
-                    } catch(e) {}
-                    return null;
-                }
-                function getMarkerColor(u) { if (u >= 5) return '#dc2626'; if (u >= 4) return '#ef4444'; if (u >= 3) return '#f97316'; return '#f59e0b'; }
-                async function refreshMapMarkers() {
-                    if (!map || !markerCluster) return;
-                    markerCluster.clearLayers();
-                    const all = [];
-                    const taskPromises = tasksData.map(async t => {
-                        const c = await geocodeLocation(t.location);
-                        if (!c) return null;
-                        const m = L.circleMarker(c, { radius: 9, fillColor: getMarkerColor(t.urgency), color: '#fff', weight: 2, fillOpacity: 0.9 });
-                        m.bindPopup(`<b>${escapeHtml(t.name)}</b><br>${escapeHtml(t.location)}<br>Urgency: ${t.urgency}/5`);
-                        return m;
-                    });
-                    const volPromises = volsData.map(async v => {
-                        const c = await geocodeLocation(v.location);
-                        if (!c) return null;
-                        const color = v.available ? '#10b981' : '#f59e0b';
-                        const m = L.circleMarker(c, { radius: 8, fillColor: color, color: '#fff', weight: 2, fillOpacity: 0.9 });
-                        m.bindPopup(`<b>${escapeHtml(v.name)}</b><br>${escapeHtml(v.location)}<br>${v.available ? 'Available' : 'Busy'}<br>${escapeHtml(v.skills)}`);
-                        return m;
-                    });
-                    const results = await Promise.all([...taskPromises, ...volPromises]);
-                    results.forEach(m => { if (m) { markerCluster.addLayer(m); all.push(m); } });
-                    if (all.length) {
-                        try { map.fitBounds(L.featureGroup(all).getBounds().pad(0.15), { maxZoom: 12 }); }
-                        catch(e) { map.setView([20, 0], 3); }
-                    }
-                }
-                function debounceMapRefresh() { clearTimeout(mapUpdateTimer); mapUpdateTimer = setTimeout(refreshMapMarkers, 800); }
-
-                // Stats & Chart
-                function updateStats() {
-                    document.getElementById('statTasks').textContent = tasksData.length;
-                    document.getElementById('statUrgent').textContent = tasksData.filter(t => t.urgency >= 4).length;
-                    document.getElementById('statAvailVols').textContent = volsData.filter(v => v.available).length;
-                    document.getElementById('statMatched').textContent = matchCount;
-                    document.getElementById('taskCountBadge').textContent = tasksData.length;
-                    document.getElementById('volCountBadge').textContent = volsData.length;
-                    updateChart();
-                }
-                function updateChart() {
-                    const ctx = document.getElementById('analyticsChart');
-                    if (!ctx) return;
-                    if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
-                    const cats = ['medical', 'food', 'shelter', 'rescue', 'logistics', 'other'];
-                    const catCounts = cats.map(c => tasksData.filter(t => (t.category || 'other') === c).length);
-                    const availCount = volsData.filter(v => v.available).length;
-                    const busyCount = volsData.length - availCount;
-                    chartInstance = new Chart(ctx, {
-                        type: 'bar',
-                        data: {
-                            labels: ['Medical', 'Food', 'Shelter', 'Rescue', 'Logistics', 'Other', 'Avail Vols', 'Busy Vols'],
-                            datasets: [{
-                                label: 'Count',
-                                data: [...catCounts, availCount, busyCount],
-                                backgroundColor: ['#ef4444','#f59e0b','#3b82f6','#8b5cf6','#10b981','#6b7280','#10b981','#f59e0b'],
-                                borderRadius: 8
-                            }]
-                        },
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-                    });
-                }
-
-                // Render functions
-                function renderTaskList() {
-                    const container = document.getElementById('taskList');
-                    if (!container) return;
-                    const filtered = taskFilterMinUrgency > 0 ? tasksData.filter(t => t.urgency >= taskFilterMinUrgency) : tasksData;
-                    if (!filtered.length) {
-                        container.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i>No tasks${taskFilterMinUrgency > 0 ? ' matching filter' : ' yet'}.</div>`;
-                        return;
-                    }
-                    container.innerHTML = filtered.map(t => {
-                        const pc = t.urgency >= 4 ? 'priority-critical' : t.urgency >= 3 ? 'priority-high' : '';
-                        return `<div class="card-item ${pc}" data-task-id="${escapeHtml(t.id)}">
-                            <div class="card-info">
-                                <strong>${escapeHtml(t.name)}</strong>
-                                <span class="badge badge-loc">${escapeHtml(t.location || 'N/A')}</span>
-                                <span class="badge badge-urg">${t.urgency}/5</span>
-                                <span class="badge">${t.peopleAffected} affected</span>
-                                <span class="badge badge-skill">${escapeHtml(t.requiredSkill)}</span>
-                                <span class="badge">${escapeHtml(t.category || 'other')}</span>
-                                <div style="font-size:0.7rem;color:var(--text2);">Priority: ${Math.round(t.priorityScore || 0)}</div>
-                            </div>
-                            <div class="card-actions">
-                                <button class="icon-btn assign" data-action="assign" data-tid="${escapeHtml(t.id)}" data-skill="${escapeHtml(t.requiredSkill)}" data-name="${escapeHtml(t.name)}" data-loc="${escapeHtml(t.location || '')}"><i class="fas fa-robot"></i> Gemini Assign</button>
-                                <button class="icon-btn del" data-action="delete-task" data-tid="${escapeHtml(t.id)}"><i class="fas fa-trash"></i></button>
-                            </div></div>`;
-                    }).join('');
-                }
-                function renderVolunteerList() {
-                    const container = document.getElementById('volunteerList');
-                    if (!container) return;
-                    const filtered = volFilterAvailOnly ? volsData.filter(v => v.available) : volsData;
-                    if (!filtered.length) {
-                        container.innerHTML = `<div class="empty-state"><i class="fas fa-user-slash"></i>No volunteers${volFilterAvailOnly ? ' available' : ''}.</div>`;
-                        return;
-                    }
-                    container.innerHTML = filtered.map(v =>
-                        `<div class="card-item" data-vol-id="${escapeHtml(v.id)}">
-                            <div class="card-info">
-                                <strong>${escapeHtml(v.name)}</strong>
-                                <span class="badge badge-skill">${escapeHtml(v.skills)}</span>
-                                <span class="badge badge-loc">${escapeHtml(v.location)}</span>
-                                <span class="badge ${v.available ? 'badge-avail' : ''}">${v.available ? 'Available' : 'Busy'}</span>
-                                <div style="font-size:0.7rem;">${escapeHtml(v.contact)}</div>
-                            </div>
-                            <div class="card-actions">
-                                <button class="icon-btn del" data-action="delete-vol" data-vid="${escapeHtml(v.id)}"><i class="fas fa-trash"></i></button>
-                            </div></div>`
-                    ).join('');
-                }
-
-                // Gemini matching (unchanged)
-                async function callGeminiForMatch(task, volunteers) {
-                    const prompt = `You are an AI disaster relief coordinator. Match this task with the best available volunteer.
+            /* ---- GEMINI MATCH ---- */
+            async function callGeminiForMatch(task, volunteers) {
+                const prompt = `You are an AI disaster relief coordinator. Match this task with the best available volunteer.
 Task: "${task.name}" | Required skill: "${task.requiredSkill}" | Location: "${task.location}" | Urgency: ${task.urgency}/5 | Affected: ${task.peopleAffected}
 Volunteers (available only):
 ${volunteers.map((v,i) => `${i+1}. ID: "${v.id}", Name: ${v.name}, Skills: "${v.skills}", Location: "${v.location}"`).join('\n')}
-Return ONLY valid JSON: {"bestVolunteerId": "exact volunteer id string", "confidenceScore": 0-100, "reasoning": "short explanation"}`;
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${geminiApiKey}`, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                    });
-                    if (!response.ok) throw new Error(`Gemini HTTP ${response.status}`);
-                    const data = await response.json();
-                    let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-                    text = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-                    const jsonMatch = text.match(/\{[\s\S]*\}/);
-                    if (!jsonMatch) throw new Error("No JSON in Gemini response");
-                    return JSON.parse(jsonMatch[0]);
-                }
-                function getSkillsArray(vol) {
-                    if (Array.isArray(vol.skillsArray) && vol.skillsArray.length) return vol.skillsArray;
-                    if (typeof vol.skills === 'string' && vol.skills.trim()) return vol.skills.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-                    return [];
-                }
-                async function localFallbackMatch(availVols, requiredSkill, taskLocation) {
-                    const taskCoords = await geocodeLocation(taskLocation);
-                    let best = null, bestScore = -Infinity;
-                    for (const vol of availVols) {
-                        const sa = getSkillsArray(vol);
-                        const skillLower = (requiredSkill || '').toLowerCase();
-                        const skillMatch = sa.some(s => skillLower.includes(s) || s.includes(skillLower));
-                        let locationScore = 0;
-                        if (taskCoords && vol.location) {
-                            const vc = await geocodeLocation(vol.location);
-                            if (vc) {
-                                const R = 6371;
-                                const dlat = (vc[0] - taskCoords[0]) * Math.PI/180;
-                                const dlon = (vc[1] - taskCoords[1]) * Math.PI/180;
-                                const a = Math.sin(dlat/2)**2 + Math.cos(taskCoords[0]*Math.PI/180) * Math.cos(vc[0]*Math.PI/180) * Math.sin(dlon/2)**2;
-                                const dist = R * 2 * Math.asin(Math.sqrt(a));
-                                locationScore = Math.max(0, 30 - dist * 2);
-                            }
-                        }
-                        const score = (skillMatch ? 60 : -20) + locationScore;
-                        if (score > bestScore) { bestScore = score; best = vol; }
-                    }
-                    return best;
-                }
-                async function smartAssign(taskId, requiredSkill, taskName, taskLocation) {
-                    const availVols = volsData.filter(v => v.available);
-                    if (!availVols.length) { showToast('No available volunteers', 'times-circle'); return; }
-                    const taskObj = tasksData.find(t => t.id === taskId);
-                    if (!taskObj) { showToast('Task not found', 'exclamation-triangle'); return; }
-                    const button = document.querySelector(`#taskList button[data-action="assign"][data-tid="${CSS.escape(taskId)}"]`);
-                    const originalHTML = button ? button.innerHTML : '';
-                    if (button) { button.innerHTML = '<span class="loading-spinner"></span> AI thinking...'; button.disabled = true; }
-                    try {
-                        let bestMatchId = null, reasoning = "";
-                        if (geminiApiKey) {
-                            try {
-                                const geminiResult = await callGeminiForMatch(taskObj, availVols);
-                                if (geminiResult.bestVolunteerId && availVols.some(v => v.id === geminiResult.bestVolunteerId)) {
-                                    bestMatchId = geminiResult.bestVolunteerId;
-                                    reasoning = geminiResult.reasoning || "Gemini AI selected this volunteer.";
-                                }
-                            } catch(e) { console.warn("Gemini failed, fallback:", e); showToast("Gemini API unavailable, local matching", "exclamation-triangle"); }
-                        }
-                        if (!bestMatchId) {
-                            const fallbackVol = await localFallbackMatch(availVols, requiredSkill, taskLocation);
-                            if (fallbackVol) { bestMatchId = fallbackVol.id; reasoning = "Local fallback (skill + distance)."; }
-                        }
-                        if (!bestMatchId) { showToast('No suitable match found', 'exclamation-triangle'); return; }
-                        const matchedVol = availVols.find(v => v.id === bestMatchId);
-                        if (!matchedVol) { showToast('Matched volunteer not found', 'exclamation-triangle'); return; }
-                        if (taskId.startsWith('demo-')) {
-                            const volIdx = volsData.findIndex(v => v.id === bestMatchId);
-                            if (volIdx !== -1) volsData[volIdx] = { ...volsData[volIdx], available: false };
-                            tasksData = tasksData.filter(t => t.id !== taskId);
-                            matchCount++;
-                            localStorage.setItem('reliefos_matchCount', matchCount);
-                            renderTaskList(); renderVolunteerList(); bindCardEvents(); updateStats(); debounceMapRefresh();
-                        } else {
-                            await volunteersRef.doc(bestMatchId).update({ available: false });
-                            await tasksRef.doc(taskId).delete();
-                            matchCount++;
-                            localStorage.setItem('reliefos_matchCount', matchCount);
-                        }
-                        showToast(`✨ "${taskName}" → ${matchedVol.name} | ${reasoning}`, 'robot');
-                        const banner = document.getElementById('smartMatchBanner');
-                        banner.style.display = 'block';
-                        banner.innerHTML = `🧠 ${escapeHtml(reasoning)} | Matched: ${escapeHtml(matchedVol.name)}`;
-                        setTimeout(() => banner.style.display = 'none', 5000);
-                    } catch(err) {
-                        console.error("smartAssign error:", err);
-                        showToast("Matching error: " + err.message, "exclamation-triangle");
-                    } finally {
-                        const btn = document.querySelector(`#taskList button[data-action="assign"][data-tid="${CSS.escape(taskId)}"]`);
-                        if (btn) { btn.innerHTML = originalHTML || '<i class="fas fa-robot"></i> Gemini Assign'; btn.disabled = false; }
-                    }
-                }
+Return ONLY valid JSON: {"bestVolunteerId":"exact volunteer id string","confidenceScore":0-100,"reasoning":"short explanation"}`;
 
-                function bindCardEvents() {
-                    const tl = document.getElementById('taskList');
-                    const vl = document.getElementById('volunteerList');
-                    if (tl) tl.onclick = e => {
-                        const b = e.target.closest('button');
-                        if (!b) return;
-                        const tid = b.dataset.tid;
-                        if (b.dataset.action === 'assign') smartAssign(tid, b.dataset.skill, b.dataset.name, b.dataset.loc);
-                        if (b.dataset.action === 'delete-task') {
-                            if (tid.startsWith('demo-')) {
-                                tasksData = tasksData.filter(t => t.id !== tid);
-                                renderTaskList(); bindCardEvents(); updateStats(); debounceMapRefresh();
-                                showToast('Demo task removed');
-                            } else tasksRef.doc(tid).delete().catch(err => showToast('Delete failed: ' + err.message, 'times-circle'));
-                        }
-                    };
-                    if (vl) vl.onclick = e => {
-                        const b = e.target.closest('button');
-                        if (!b) return;
-                        const vid = b.dataset.vid;
-                        if (b.dataset.action === 'delete-vol') {
-                            if (vid.startsWith('demo-')) {
-                                volsData = volsData.filter(v => v.id !== vid);
-                                renderVolunteerList(); bindCardEvents(); updateStats(); debounceMapRefresh();
-                                showToast('Demo volunteer removed');
-                            } else volunteersRef.doc(vid).delete().catch(err => showToast('Delete failed: ' + err.message, 'times-circle'));
-                        }
-                    };
-                }
-
-                function setupRealtime() {
-                    firebaseUnsubscribes.forEach(fn => fn());
-                    firebaseUnsubscribes = [];
-                    const unsub1 = tasksRef.onSnapshot(snap => {
-                        if (demoActive) return;
-                        tasksData = snap.docs.map(d => ({...d.data(), id: d.id})).sort((a,b) => (b.priorityScore||0) - (a.priorityScore||0));
-                        renderTaskList(); bindCardEvents(); updateStats(); debounceMapRefresh();
-                    }, err => console.error("Tasks listener error:", err));
-                    const unsub2 = volunteersRef.onSnapshot(snap => {
-                        if (demoActive) return;
-                        volsData = snap.docs.map(d => ({...d.data(), id: d.id}));
-                        renderVolunteerList(); bindCardEvents(); updateStats(); debounceMapRefresh();
-                    }, err => console.error("Volunteers listener error:", err));
-                    firebaseUnsubscribes = [unsub1, unsub2];
-                    window._firebaseUnsubscribes = firebaseUnsubscribes;
-                }
-
-                document.getElementById('taskForm').addEventListener('submit', async e => {
-                    e.preventDefault();
-                    if (demoActive) { showToast('Forms disabled during demo', 'exclamation-triangle'); return; }
-                    const n = document.getElementById('taskName').value.trim(), l = document.getElementById('taskLocation').value.trim(), c = document.getElementById('taskCategory').value, u = parseFloat(document.getElementById('urgency').value), p = parseInt(document.getElementById('people').value), s = document.getElementById('skill').value.trim().toLowerCase();
-                    if (!n || !l || !u || !p || !s) { showToast('Fill all fields', 'exclamation-triangle'); return; }
-                    try {
-                        await tasksRef.add({ name:n, location:l, category:c, urgency:u, peopleAffected:p, requiredSkill:s, priorityScore:(u*20)+(p/5), createdAt:firebase.firestore.FieldValue.serverTimestamp() });
-                        document.getElementById('taskForm').reset();
-                        showToast('Task created!', 'check-circle');
-                    } catch(err) { showToast('Error: ' + err.message, 'times-circle'); }
-                });
-                document.getElementById('volunteerForm').addEventListener('submit', async e => {
-                    e.preventDefault();
-                    if (demoActive) { showToast('Forms disabled during demo', 'exclamation-triangle'); return; }
-                    const n = document.getElementById('volunteerName').value.trim(), sr = document.getElementById('volunteerSkills').value.trim(), l = document.getElementById('volunteerLocation').value.trim(), ct = document.getElementById('volunteerContact').value.trim(), av = document.getElementById('availability').value === 'true';
-                    if (!n || !sr || !l || !ct) { showToast('Fill all fields', 'exclamation-triangle'); return; }
-                    try {
-                        await volunteersRef.add({ name:n, skills:sr, skillsArray:sr.split(',').map(s=>s.trim().toLowerCase()), location:l, contact:ct, available:av, createdAt:firebase.firestore.FieldValue.serverTimestamp() });
-                        document.getElementById('volunteerForm').reset();
-                        showToast(`${n} registered!`, 'user-check');
-                    } catch(err) { showToast('Error: ' + err.message, 'times-circle'); }
-                });
-
-                window.triggerEmergencyMode = function() { emergencyActive = !emergencyActive; document.body.classList.toggle('emergency-mode'); showToast(emergencyActive ? '🚨 Emergency ON' : 'Emergency deactivated'); };
-                window.exportData = function() {
-                    const lines = ['ReliefOS Export Report', `Date: ${new Date().toISOString()}`, `Tasks: ${tasksData.length}`, `Volunteers: ${volsData.length}`, `AI Matches: ${matchCount}`, '', '--- TASKS ---', ...tasksData.map(t => `[${t.urgency}/5] ${t.name} @ ${t.location} (${t.category}) — ${t.peopleAffected} affected`), '', '--- VOLUNTEERS ---', ...volsData.map(v => `${v.name} | ${v.skills} | ${v.location} | ${v.available?'Available':'Busy'}`)];
-                    const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
-                    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `reliefos-report-${Date.now()}.txt`; a.click();
-                    showToast('Report exported');
-                };
-                window.refreshAllData = function() { locationCache = {}; debounceMapRefresh(); showToast('Map refreshed'); };
-                window.filterTasks = function() {
-                    showFilterModal('Filter Tasks by Urgency',
-                        `<label style="display:block;margin-bottom:0.4rem;font-size:0.85rem;color:var(--text2);">Minimum urgency (1–5)</label>
-                         <input type="number" id="filterUrgencyInput" min="0" max="5" value="${taskFilterMinUrgency||0}" style="width:100%;padding:0.5rem;border-radius:0.5rem;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);">
-                         <small style="color:var(--text2);">Set to 0 to clear filter</small>`,
-                        () => {
-                            const val = parseInt(document.getElementById('filterUrgencyInput').value);
-                            taskFilterMinUrgency = isNaN(val) ? 0 : Math.max(0, Math.min(5, val));
-                            renderTaskList(); bindCardEvents();
-                            showToast(taskFilterMinUrgency > 0 ? `Showing urgency ≥ ${taskFilterMinUrgency}` : 'Filter cleared');
-                        });
-                };
-                window.filterVolunteers = function() {
-                    showFilterModal('Filter Volunteers',
-                        `<label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.9rem;">
-                            <input type="checkbox" id="filterAvailCheck" ${volFilterAvailOnly?'checked':''} style="width:auto;"> Show available only
-                         </label>`,
-                        () => {
-                            volFilterAvailOnly = document.getElementById('filterAvailCheck').checked;
-                            renderVolunteerList(); bindCardEvents();
-                            showToast(volFilterAvailOnly ? 'Showing available only' : 'Showing all volunteers');
-                        });
-                };
-
-                const COUNTRY_DEMOS = {
-                    india: { tasks:[{name:"Flood Rescue",location:"Rajahmundry, AP",category:"rescue",urgency:5,peopleAffected:1500,requiredSkill:"swimming"}], volunteers:[{name:"Venkatesh",skills:"swimming",location:"Rajahmundry, AP",contact:"9876543210",available:true}], coords:{'rajahmundry, ap':[17.0005,81.8040]} },
-                    usa: { tasks:[{name:"Hurricane",location:"Miami, FL",category:"rescue",urgency:5,peopleAffected:2000,requiredSkill:"swimming"}], volunteers:[{name:"John",skills:"swimming",location:"Miami, FL",contact:"555-0100",available:true}], coords:{'miami, fl':[25.7617,-80.1918]} },
-                    japan: { tasks:[{name:"Earthquake",location:"Tokyo",category:"rescue",urgency:5,peopleAffected:2500,requiredSkill:"USAR"}], volunteers:[{name:"Taro",skills:"USAR",location:"Tokyo",contact:"080-1234",available:true}], coords:{'tokyo':[35.6762,139.6503]} },
-                    brazil: { tasks:[{name:"Flood",location:"São Paulo",category:"rescue",urgency:5,peopleAffected:1800,requiredSkill:"swimming"}], volunteers:[{name:"João",skills:"swimming",location:"São Paulo",contact:"1191234",available:true}], coords:{'são paulo':[-23.5505,-46.6333]} }
-                };
-                window.loadCountryDemo = function(country) {
-                    firebaseUnsubscribes.forEach(fn => fn());
-                    firebaseUnsubscribes = [];
-                    taskFilterMinUrgency = 0; volFilterAvailOnly = false;
-                    if (country === 'none') {
-                        demoActive = false; matchCount = 0; localStorage.removeItem('reliefos_matchCount');
-                        tasksData = []; volsData = []; locationCache = {};
-                        renderTaskList(); renderVolunteerList(); bindCardEvents(); updateStats(); debounceMapRefresh();
-                        setupRealtime();
-                        document.getElementById('countrySelectSidebar').value = 'none';
-                        showToast('Switched to live Firebase mode', 'database');
-                        return;
-                    }
-                    const demo = COUNTRY_DEMOS[country]; if (!demo) return;
-                    demoActive = true;
-                    tasksData = demo.tasks.map((t,i) => ({...t, id:`demo-task-${i}`, priorityScore:(t.urgency*20)+(t.peopleAffected/5)}));
-                    volsData = demo.volunteers.map((v,i) => ({...v, id:`demo-vol-${i}`, skillsArray:v.skills.split(',').map(s=>s.trim().toLowerCase())}));
-                    for (const [k,v] of Object.entries(demo.coords)) locationCache[k] = v;
-                    renderTaskList(); renderVolunteerList(); bindCardEvents(); updateStats(); debounceMapRefresh();
-                    showToast(`Demo loaded: ${country}`, 'flag');
-                    document.getElementById('countrySelectSidebar').value = country;
-                };
-
-                // Theme toggle
-                const savedTheme = localStorage.getItem('reliefos_theme') || 'light';
-                document.documentElement.setAttribute('data-theme', savedTheme);
-                document.getElementById('themeToggle').addEventListener('click', () => {
-                    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-                    document.documentElement.setAttribute('data-theme', next);
-                    localStorage.setItem('reliefos_theme', next);
-                    if (map) {
-                        const tileUrl = next === 'dark' ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
-                        map.eachLayer(l => { if (l instanceof L.TileLayer) l.setUrl(tileUrl); });
-                    }
-                });
-
-                document.getElementById('hamburgerBtn').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('open'));
-                document.querySelectorAll('.sidebar-nav a[data-nav]').forEach(link => {
-                    link.addEventListener('click', e => {
-                        document.querySelectorAll('.sidebar-nav a').forEach(l => l.classList.remove('active'));
-                        e.target.closest('a').classList.add('active');
-                        if (window.innerWidth < 1101) document.getElementById('sidebar').classList.remove('open');
-                        document.getElementById('currentSectionTitle').textContent = e.target.closest('a').getAttribute('data-nav').replace('-',' ').replace(/^\w/, c => c.toUpperCase());
-                    });
-                });
-                document.addEventListener('keydown', e => {
-                    if (e.ctrlKey && e.key === 'e') { e.preventDefault(); window.triggerEmergencyMode(); }
-                    if (e.ctrlKey && e.key === 'r') { e.preventDefault(); window.refreshAllData(); }
-                });
-
-                initMap();
-                setupRealtime();
-                document.getElementById('statMatched').textContent = matchCount;
-                setTimeout(() => map && map.invalidateSize(), 600);
+                const response = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${geminiApiKey}`,
+                    { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ contents:[{ parts:[{ text: prompt }] }] }) }
+                );
+                if (!response.ok) throw new Error(`Gemini HTTP ${response.status}`);
+                const data = await response.json();
+                let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                text = text.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+                const jsonMatch = text.match(/\{[\s\S]*\}/);
+                if (!jsonMatch) throw new Error("No JSON in Gemini response");
+                return JSON.parse(jsonMatch[0]);
             }
-        })();
+
+            function getSkillsArray(vol) {
+                if (Array.isArray(vol.skillsArray) && vol.skillsArray.length) return vol.skillsArray;
+                if (typeof vol.skills === 'string' && vol.skills.trim())
+                    return vol.skills.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+                return [];
+            }
+
+            async function localFallbackMatch(availVols, requiredSkill, taskLocation) {
+                const taskCoords = await geocodeLocation(taskLocation);
+                let best = null, bestScore = -Infinity;
+                for (const vol of availVols) {
+                    const sa = getSkillsArray(vol);
+                    const skillLower = (requiredSkill || '').toLowerCase();
+                    const skillMatch = sa.some(s => skillLower.includes(s) || s.includes(skillLower));
+                    let locationScore = 0;
+                    if (taskCoords && vol.location) {
+                        const vc = await geocodeLocation(vol.location);
+                        if (vc) {
+                            const R = 6371;
+                            const dlat = (vc[0]-taskCoords[0]) * Math.PI/180;
+                            const dlon = (vc[1]-taskCoords[1]) * Math.PI/180;
+                            const a = Math.sin(dlat/2)**2 + Math.cos(taskCoords[0]*Math.PI/180)*Math.cos(vc[0]*Math.PI/180)*Math.sin(dlon/2)**2;
+                            const dist = R * 2 * Math.asin(Math.sqrt(a));
+                            locationScore = Math.max(0, 30 - dist * 2);
+                        }
+                    }
+                    const score = (skillMatch ? 60 : -20) + locationScore;
+                    if (score > bestScore) { bestScore = score; best = vol; }
+                }
+                return best;
+            }
+
+            async function smartAssign(taskId, requiredSkill, taskName, taskLocation) {
+                const availVols = volsData.filter(v => v.available);
+                if (!availVols.length) { showToast('No available volunteers', 'times-circle'); return; }
+                const taskObj = tasksData.find(t => t.id === taskId);
+                if (!taskObj) { showToast('Task not found', 'exclamation-triangle'); return; }
+
+                const button = document.querySelector(`#taskList button[data-action="assign"][data-tid="${CSS.escape(taskId)}"]`);
+                const originalHTML = button ? button.innerHTML : '';
+                if (button) { button.innerHTML = '<span class="loading-spinner"></span> AI thinking...'; button.disabled = true; }
+
+                try {
+                    let bestMatchId = null, reasoning = "";
+                    if (geminiApiKey) {
+                        try {
+                            const result = await callGeminiForMatch(taskObj, availVols);
+                            if (result.bestVolunteerId && availVols.some(v => v.id === result.bestVolunteerId)) {
+                                bestMatchId = result.bestVolunteerId;
+                                reasoning   = result.reasoning || "Gemini AI selected this volunteer.";
+                            }
+                        } catch(e) {
+                            console.warn("Gemini failed, falling back:", e);
+                            showToast("Gemini unavailable — using local match", "exclamation-triangle");
+                        }
+                    }
+                    if (!bestMatchId) {
+                        const fb = await localFallbackMatch(availVols, requiredSkill, taskLocation);
+                        if (fb) { bestMatchId = fb.id; reasoning = "Local fallback (skill + distance)."; }
+                    }
+                    if (!bestMatchId) { showToast('No suitable match found', 'exclamation-triangle'); return; }
+                    const matchedVol = availVols.find(v => v.id === bestMatchId);
+                    if (!matchedVol) { showToast('Matched volunteer not found', 'exclamation-triangle'); return; }
+
+                    if (taskId.startsWith('demo-')) {
+                        const vi = volsData.findIndex(v => v.id === bestMatchId);
+                        if (vi !== -1) volsData[vi] = { ...volsData[vi], available: false };
+                        tasksData = tasksData.filter(t => t.id !== taskId);
+                        matchCount++;
+                        localStorage.setItem('reliefos_matchCount', matchCount);
+                        renderTaskList(); renderVolunteerList(); bindCardEvents(); updateStats(); debounceMapRefresh();
+                    } else {
+                        await volunteersRef.doc(bestMatchId).update({ available: false });
+                        await tasksRef.doc(taskId).delete();
+                        matchCount++;
+                        localStorage.setItem('reliefos_matchCount', matchCount);
+                    }
+
+                    showToast(`✨ "${taskName}" → ${matchedVol.name} | ${reasoning}`, 'robot');
+                    const banner = document.getElementById('smartMatchBanner');
+                    banner.style.display = 'block';
+                    banner.innerHTML = `🧠 ${escapeHtml(reasoning)} | Matched: ${escapeHtml(matchedVol.name)}`;
+                    setTimeout(() => { banner.style.display = 'none'; }, 5000);
+
+                } catch(err) {
+                    console.error("smartAssign error:", err);
+                    showToast("Matching error: " + err.message, "exclamation-triangle");
+                } finally {
+                    const btn = document.querySelector(`#taskList button[data-action="assign"][data-tid="${CSS.escape(taskId)}"]`);
+                    if (btn) { btn.innerHTML = originalHTML || '<i class="fas fa-robot"></i> Gemini Assign'; btn.disabled = false; }
+                }
+            }
+
+            function bindCardEvents() {
+                const tl = document.getElementById('taskList');
+                const vl = document.getElementById('volunteerList');
+                if (tl) tl.onclick = e => {
+                    const b = e.target.closest('button');
+                    if (!b) return;
+                    const tid = b.dataset.tid;
+                    if (b.dataset.action === 'assign')
+                        smartAssign(tid, b.dataset.skill, b.dataset.name, b.dataset.loc);
+                    if (b.dataset.action === 'delete-task') {
+                        if (tid.startsWith('demo-')) {
+                            tasksData = tasksData.filter(t => t.id !== tid);
+                            renderTaskList(); bindCardEvents(); updateStats(); debounceMapRefresh();
+                            showToast('Demo task removed');
+                        } else {
+                            tasksRef.doc(tid).delete().catch(err => showToast('Delete failed: ' + err.message, 'times-circle'));
+                        }
+                    }
+                };
+                if (vl) vl.onclick = e => {
+                    const b = e.target.closest('button');
+                    if (!b) return;
+                    const vid = b.dataset.vid;
+                    if (b.dataset.action === 'delete-vol') {
+                        if (vid.startsWith('demo-')) {
+                            volsData = volsData.filter(v => v.id !== vid);
+                            renderVolunteerList(); bindCardEvents(); updateStats(); debounceMapRefresh();
+                            showToast('Demo volunteer removed');
+                        } else {
+                            volunteersRef.doc(vid).delete().catch(err => showToast('Delete failed: ' + err.message, 'times-circle'));
+                        }
+                    }
+                };
+            }
+
+            /* ---- FIREBASE REALTIME ---- */
+            function setupRealtime() {
+                firebaseUnsubscribes.forEach(fn => fn());
+                firebaseUnsubscribes = [];
+                const u1 = tasksRef.onSnapshot(snap => {
+                    if (demoActive) return;
+                    tasksData = snap.docs.map(d => ({...d.data(), id: d.id}))
+                        .sort((a,b) => (b.priorityScore||0) - (a.priorityScore||0));
+                    renderTaskList(); bindCardEvents(); updateStats(); debounceMapRefresh();
+                }, err => console.error("Tasks listener:", err));
+                const u2 = volunteersRef.onSnapshot(snap => {
+                    if (demoActive) return;
+                    volsData = snap.docs.map(d => ({...d.data(), id: d.id}));
+                    renderVolunteerList(); bindCardEvents(); updateStats(); debounceMapRefresh();
+                }, err => console.error("Volunteers listener:", err));
+                firebaseUnsubscribes = [u1, u2];
+            }
+
+            /* ---- FORMS ---- */
+            document.getElementById('taskForm').addEventListener('submit', async e => {
+                e.preventDefault();
+                if (demoActive) { showToast('Forms disabled during demo', 'exclamation-triangle'); return; }
+                const n = document.getElementById('taskName').value.trim();
+                const l = document.getElementById('taskLocation').value.trim();
+                const c = document.getElementById('taskCategory').value;
+                const u = parseFloat(document.getElementById('urgency').value);
+                const p = parseInt(document.getElementById('people').value);
+                const s = document.getElementById('skill').value.trim().toLowerCase();
+                if (!n||!l||!u||!p||!s) { showToast('Fill all fields', 'exclamation-triangle'); return; }
+                try {
+                    await tasksRef.add({ name:n, location:l, category:c, urgency:u, peopleAffected:p, requiredSkill:s, priorityScore:(u*20)+(p/5), createdAt:firebase.firestore.FieldValue.serverTimestamp() });
+                    document.getElementById('taskForm').reset();
+                    showToast('Task created!', 'check-circle');
+                } catch(err) { showToast('Error: ' + err.message, 'times-circle'); }
+            });
+
+            document.getElementById('volunteerForm').addEventListener('submit', async e => {
+                e.preventDefault();
+                if (demoActive) { showToast('Forms disabled during demo', 'exclamation-triangle'); return; }
+                const n  = document.getElementById('volunteerName').value.trim();
+                const sr = document.getElementById('volunteerSkills').value.trim();
+                const l  = document.getElementById('volunteerLocation').value.trim();
+                const ct = document.getElementById('volunteerContact').value.trim();
+                const av = document.getElementById('availability').value === 'true';
+                if (!n||!sr||!l||!ct) { showToast('Fill all fields', 'exclamation-triangle'); return; }
+                try {
+                    await volunteersRef.add({ name:n, skills:sr, skillsArray:sr.split(',').map(s=>s.trim().toLowerCase()), location:l, contact:ct, available:av, createdAt:firebase.firestore.FieldValue.serverTimestamp() });
+                    document.getElementById('volunteerForm').reset();
+                    showToast(`${n} registered!`, 'user-check');
+                } catch(err) { showToast('Error: ' + err.message, 'times-circle'); }
+            });
+
+            /* ---- GLOBAL ACTIONS ---- */
+            window.triggerEmergencyMode = function () {
+                emergencyActive = !emergencyActive;
+                document.body.classList.toggle('emergency-mode');
+                showToast(emergencyActive ? '🚨 Emergency ON' : 'Emergency deactivated');
+            };
+
+            window.exportData = function () {
+                const lines = [
+                    'ReliefOS Export Report', `Date: ${new Date().toISOString()}`,
+                    `Tasks: ${tasksData.length}`, `Volunteers: ${volsData.length}`, `AI Matches: ${matchCount}`,
+                    '', '--- TASKS ---',
+                    ...tasksData.map(t => `[${t.urgency}/5] ${t.name} @ ${t.location} (${t.category}) — ${t.peopleAffected} affected`),
+                    '', '--- VOLUNTEERS ---',
+                    ...volsData.map(v => `${v.name} | ${v.skills} | ${v.location} | ${v.available?'Available':'Busy'}`)
+                ];
+                const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob); a.download = `reliefos-report-${Date.now()}.txt`; a.click();
+                showToast('Report exported');
+            };
+
+            window.refreshAllData = function () {
+                locationCache = {}; debounceMapRefresh(); showToast('Map refreshed');
+            };
+
+            window.filterTasks = function () {
+                showFilterModal('Filter Tasks by Urgency',
+                    `<label style="display:block;margin-bottom:0.4rem;font-size:0.85rem;color:var(--text2);">Minimum urgency (1–5)</label>
+                     <input type="number" id="filterUrgencyInput" min="0" max="5" value="${taskFilterMinUrgency||0}" style="width:100%;padding:0.5rem;border-radius:0.5rem;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);">
+                     <small style="color:var(--text2);">Set to 0 to clear filter</small>`,
+                    () => {
+                        const val = parseInt(document.getElementById('filterUrgencyInput').value);
+                        taskFilterMinUrgency = isNaN(val) ? 0 : Math.max(0, Math.min(5, val));
+                        renderTaskList(); bindCardEvents();
+                        showToast(taskFilterMinUrgency > 0 ? `Showing urgency ≥ ${taskFilterMinUrgency}` : 'Filter cleared');
+                    });
+            };
+
+            window.filterVolunteers = function () {
+                showFilterModal('Filter Volunteers',
+                    `<label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.9rem;">
+                        <input type="checkbox" id="filterAvailCheck" ${volFilterAvailOnly?'checked':''} style="width:auto;"> Show available only
+                     </label>`,
+                    () => {
+                        volFilterAvailOnly = document.getElementById('filterAvailCheck').checked;
+                        renderVolunteerList(); bindCardEvents();
+                        showToast(volFilterAvailOnly ? 'Showing available only' : 'Showing all volunteers');
+                    });
+            };
+
+            /* ---- COUNTRY DEMOS ---- */
+            const COUNTRY_DEMOS = {
+                india:  { tasks:[{name:"Flood Rescue",location:"Rajahmundry, AP",category:"rescue",urgency:5,peopleAffected:1500,requiredSkill:"swimming"}], volunteers:[{name:"Venkatesh",skills:"swimming",location:"Rajahmundry, AP",contact:"9876543210",available:true}], coords:{'rajahmundry, ap':[17.0005,81.8040]} },
+                usa:    { tasks:[{name:"Hurricane",location:"Miami, FL",category:"rescue",urgency:5,peopleAffected:2000,requiredSkill:"swimming"}], volunteers:[{name:"John",skills:"swimming",location:"Miami, FL",contact:"555-0100",available:true}], coords:{'miami, fl':[25.7617,-80.1918]} },
+                japan:  { tasks:[{name:"Earthquake",location:"Tokyo",category:"rescue",urgency:5,peopleAffected:2500,requiredSkill:"USAR"}], volunteers:[{name:"Taro",skills:"USAR",location:"Tokyo",contact:"080-1234",available:true}], coords:{'tokyo':[35.6762,139.6503]} },
+                brazil: { tasks:[{name:"Flood",location:"São Paulo",category:"rescue",urgency:5,peopleAffected:1800,requiredSkill:"swimming"}], volunteers:[{name:"João",skills:"swimming",location:"São Paulo",contact:"1191234",available:true}], coords:{'são paulo':[-23.5505,-46.6333]} }
+            };
+
+            window.loadCountryDemo = function (country) {
+                firebaseUnsubscribes.forEach(fn => fn());
+                firebaseUnsubscribes = [];
+                taskFilterMinUrgency = 0; volFilterAvailOnly = false;
+                if (country === 'none') {
+                    demoActive = false; matchCount = 0;
+                    localStorage.removeItem('reliefos_matchCount');
+                    tasksData = []; volsData = []; locationCache = {};
+                    renderTaskList(); renderVolunteerList(); bindCardEvents(); updateStats(); debounceMapRefresh();
+                    setupRealtime();
+                    document.getElementById('countrySelectSidebar').value = 'none';
+                    showToast('Switched to live Firebase mode', 'database');
+                    return;
+                }
+                const demo = COUNTRY_DEMOS[country]; if (!demo) return;
+                demoActive = true;
+                tasksData = demo.tasks.map((t,i) => ({...t, id:`demo-task-${i}`, priorityScore:(t.urgency*20)+(t.peopleAffected/5)}));
+                volsData  = demo.volunteers.map((v,i) => ({...v, id:`demo-vol-${i}`, skillsArray:v.skills.split(',').map(s=>s.trim().toLowerCase())}));
+                Object.assign(locationCache, demo.coords);
+                renderTaskList(); renderVolunteerList(); bindCardEvents(); updateStats(); debounceMapRefresh();
+                showToast(`Demo loaded: ${country}`, 'flag');
+                document.getElementById('countrySelectSidebar').value = country;
+            };
+
+            /* ---- THEME TOGGLE ---- */
+            const themeToggle = document.getElementById('themeToggle');
+            function applyThemeUI(theme) {
+                const icon = themeToggle.querySelector('i');
+                const span = themeToggle.querySelector('span');
+                if (theme === 'dark') { icon.className = 'fas fa-sun'; span.textContent = 'Light Mode'; }
+                else                  { icon.className = 'fas fa-moon'; span.textContent = 'Dark Mode'; }
+            }
+            applyThemeUI(savedTheme);
+
+            themeToggle.addEventListener('click', () => {
+                const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('reliefos_theme', next);
+                applyThemeUI(next);
+                if (map) {
+                    const tileUrl = next === 'dark'
+                        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                        : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+                    map.eachLayer(l => { if (l instanceof L.TileLayer) l.setUrl(tileUrl); });
+                }
+            });
+
+            /* ---- HAMBURGER ---- */
+            document.getElementById('hamburgerBtn').addEventListener('click', () =>
+                document.getElementById('sidebar').classList.toggle('open')
+            );
+
+            /* ---- NAV LINKS ---- */
+            document.querySelectorAll('.sidebar-nav a[data-nav]').forEach(link => {
+                link.addEventListener('click', e => {
+                    document.querySelectorAll('.sidebar-nav a').forEach(l => l.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+                    if (window.innerWidth < 1101) document.getElementById('sidebar').classList.remove('open');
+                    const nav = e.currentTarget.getAttribute('data-nav') || '';
+                    document.getElementById('currentSectionTitle').textContent =
+                        nav.replace(/-/g,' ').replace(/^\w/, c => c.toUpperCase());
+                });
+            });
+
+            /* ---- KEYBOARD SHORTCUTS ---- */
+            document.addEventListener('keydown', e => {
+                if (e.ctrlKey && e.key === 'e') { e.preventDefault(); window.triggerEmergencyMode(); }
+                if (e.ctrlKey && e.key === 'r') { e.preventDefault(); window.refreshAllData(); }
+            });
+
+            /* ---- BOOTSTRAP ---- */
+            initMap();
+            setupRealtime();
+            updateStats(); // Show zeros immediately
+            // Invalidate map size after layout settles
+            setTimeout(() => { if (map) map.invalidateSize(); }, 600);
+            setTimeout(() => { if (map) map.invalidateSize(); }, 1200);
+        }
+
+    })();
     </script>
 </body>
 </html>
